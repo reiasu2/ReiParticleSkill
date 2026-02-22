@@ -1,0 +1,158 @@
+/*
+ * Copyright (C) 2025 Reiasu
+ *
+ * This file is part of ReiParticlesAPI.
+ *
+ * ReiParticlesAPI is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, version 3 of the License.
+ *
+ * ReiParticlesAPI is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with ReiParticlesAPI. If not, see <https://www.gnu.org/licenses/>.
+ */
+// SPDX-License-Identifier: LGPL-3.0-only
+package com.reiasu.reiparticlesapi.reflect;
+
+import com.reiasu.reiparticlesapi.ReiParticlesConstants;
+import io.github.classgraph.ClassGraph;
+import io.github.classgraph.ClassInfo;
+import io.github.classgraph.ClassInfoList;
+import io.github.classgraph.ScanResult;
+
+import java.lang.annotation.Annotation;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.stream.Collectors;
+
+/**
+ * Classpath scanner using ClassGraph that discovers annotated classes at runtime.
+ * <p>
+ * Packages to scan must be registered via {@link #registerPackage(Class)} or
+ * {@link #registerPackage(String)} before calling {@link #scan()}.
+ */
+public final class ReiAPIScanner {
+
+    public static final ReiAPIScanner INSTANCE = new ReiAPIScanner();
+
+    private final HashSet<String> scanPackages = new HashSet<>();
+    private boolean loaded = false;
+    private final HashSet<SimpleClassInfo> classes = new HashSet<>();
+
+    private ReiAPIScanner() {
+    }
+
+    /**
+     * Perform the classpath scan. Only runs once; subsequent calls are no-ops.
+     */
+    public void scan() {
+        if (loaded) {
+            return;
+        }
+        loaded = true;
+
+        long start = System.currentTimeMillis();
+        ReiParticlesConstants.logger.info("Starting ClassGraph scan...");
+
+        String[] packages = scanPackages.toArray(new String[0]);
+        try (ScanResult scanResult = new ClassGraph()
+                .enableClassInfo()
+                .enableAnnotationInfo()
+                .acceptPackages(packages)
+                .scan()) {
+
+            ClassInfoList allClasses = scanResult.getAllClasses()
+                    .filter(ci -> !ci.getAnnotations().isEmpty());
+
+            for (ClassInfo ci : allClasses) {
+                String className = ci.getName();
+                HashSet<String> annotationNames = ci.getAnnotations().stream()
+                        .map(ClassInfo::getName)
+                        .collect(Collectors.toCollection(HashSet::new));
+                classes.add(new SimpleClassInfo(className, annotationNames));
+            }
+        }
+
+        long end = System.currentTimeMillis();
+        ReiParticlesConstants.logger.info("ClassGraph scan completed in {}ms", (end - start));
+    }
+
+    /**
+     * Return all scanned classes that carry the given annotation.
+     */
+    public Collection<SimpleClassInfo> getWithAnnotation(Class<? extends Annotation> anno) {
+        List<SimpleClassInfo> out = new ArrayList<>();
+        for (SimpleClassInfo info : classes) {
+            if (info.isAnnotationPresent(anno)) {
+                out.add(info);
+            }
+        }
+        return out;
+    }
+
+    /**
+     * Return loaded {@link Class} objects for all scanned classes that carry the given annotation.
+     */
+    public Collection<Class<?>> getClassesWithAnnotation(Class<? extends Annotation> anno) {
+        List<Class<?>> out = new ArrayList<>();
+        for (SimpleClassInfo info : classes) {
+            if (info.isAnnotationPresent(anno)) {
+                try {
+                    out.add(info.toClass());
+                } catch (ClassNotFoundException e) {
+                    ReiParticlesConstants.logger.warn("Failed to load class: " + info.getType(), e);
+                }
+            }
+        }
+        return out;
+    }
+
+    /**
+     * Manually add a scan result (used internally during scan, or for testing).
+     */
+    public void inputScanResult(SimpleClassInfo scanResult) {
+        classes.add(scanResult);
+    }
+
+    /**
+     * Mark the scanner as loaded without performing a scan.
+     * Used by NeoForge/Forge mod-scan bootstrapping that provides class info externally.
+     */
+    public void neoLoaded() {
+        loaded = true;
+    }
+
+    /**
+     * Register a package to scan, derived from the given class's package.
+     */
+    public static void registerPackage(Class<?> main) {
+        String packageName = main.getPackageName();
+        registerPackage(packageName);
+    }
+
+    /**
+     * Register a package name to include in the ClassGraph scan.
+     */
+    public static void registerPackage(String packageName) {
+        INSTANCE.scanPackages.add(packageName);
+        ReiParticlesConstants.logger.info("Registered scan package: {}", packageName);
+    }
+
+    /** @deprecated Use {@link #registerPackage(Class)} instead. */
+    @Deprecated(forRemoval = true)
+    public static void registerPacket(Class<?> main) {
+        registerPackage(main);
+    }
+
+    /** @deprecated Use {@link #registerPackage(String)} instead. */
+    @Deprecated(forRemoval = true)
+    public static void registerPacket(String packageName) {
+        registerPackage(packageName);
+    }
+}

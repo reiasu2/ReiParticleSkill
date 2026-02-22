@@ -1,0 +1,32 @@
+Project: ReiParticleSkill Forge Workspace
+SPDX-License-Identifier: LGPL-3.0-only
+
+Copyright (C) 2025 Reiasu
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License as published by
+the Free Software Foundation, version 3 of the License only (LGPL-3.0-only).
+No "or later version" clause applies.
+
+Note: LGPL-3.0 is an additional permission set on top of the GNU General
+Public License version 3 (GPL-3.0). Both license texts are provided in the
+LICENSES/ directory. See LICENSES/LGPL-3.0.txt and LICENSES/GPL-3.0.txt.
+
+Modules:
+1. ReiParticleSkill   - Forge 1.20.1 particle effects mod
+2. ReiParticlesAPI    - Particle system API
+
+License scope:
+- All files in this project, including source code, build scripts, and
+  audio/visual assets, are licensed under LGPL-3.0-only.
+
+Source code availability:
+- If you redistribute the binary (jar), you must also make the corresponding
+  source code available (e.g., by providing the repository URL + version tag,
+  or otherwise as described in the LGPL-3.0).
+- Source: https://github.com/reiasu2/ReiParticleSkill
+  For release builds, use the matching version tag (e.g., /tree/v1.0).
+
+Trademark notice:
+- Minecraft is a trademark of Mojang Studios.
+- This project is community-maintained and not endorsed by Mojang Studios.
