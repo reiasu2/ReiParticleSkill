@@ -10,8 +10,6 @@ import com.reiasu.reiparticleskill.command.DisplayDebugRuntime;
 import com.reiasu.reiparticleskill.command.layout.DisplayIndexPlan;
 import com.reiasu.reiparticleskill.command.layout.DisplayIndexRouting;
 import com.reiasu.reiparticleskill.command.layout.DisplaySpawnProfile;
-import com.reiasu.reiparticleskill.compat.version.CommandSourceVersionBridge;
-import com.reiasu.reiparticleskill.compat.version.VersionBridgeRegistry;
 import com.reiasu.reiparticleskill.display.BarrageItemDisplay;
 import com.reiasu.reiparticleskill.display.group.ServerDisplayGroupManager;
 import com.reiasu.reiparticleskill.display.group.impl.SimpleSwordFormationGroupGroup;
@@ -24,6 +22,7 @@ import com.mojang.brigadier.arguments.IntegerArgumentType;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.coordinates.Vec3Argument;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -34,8 +33,6 @@ import java.util.Optional;
 public final class DisplayCommandPort {
     private DisplayCommandPort() {
     }
-
-    private static final CommandSourceVersionBridge BRIDGE = VersionBridgeRegistry.commandSource();
 
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
         dispatcher.register(
@@ -59,25 +56,22 @@ public final class DisplayCommandPort {
     private static int run(CommandSourceStack source, int index, net.minecraft.world.phys.Vec3 posArg) {
         Optional<DisplayIndexPlan> planOpt = DisplayIndexRouting.plan(index);
         if (planOpt.isEmpty()) {
-            BRIDGE.sendFailure(source, "display index unsupported: " + index);
+            source.sendFailure(Component.literal("display index unsupported: " + index));
             return 0;
         }
 
-        var level = BRIDGE.level(source);
-        net.minecraft.world.phys.Vec3 pos = posArg != null ? posArg : BRIDGE.position(source);
+        var level = source.getLevel();
+        net.minecraft.world.phys.Vec3 pos = posArg != null ? posArg : source.getPosition();
         DisplayIndexPlan plan = planOpt.get();
 
-        int runtimeSpawned = spawnNative(plan, level, pos);
+        final int runtimeSpawned = spawnNative(plan, level, pos);
+        final int previewFallback = runtimeSpawned <= 0
+                ? DisplayDebugRuntime.previewByPlan(level, pos.x, pos.y, pos.z, plan) : 0;
 
-        int previewFallback = 0;
-        if (runtimeSpawned <= 0) {
-            previewFallback = DisplayDebugRuntime.previewByPlan(level, pos.x, pos.y, pos.z, plan);
-        }
-
-        BRIDGE.sendSuccess(source, "display index=" + index
+        source.sendSuccess(() -> Component.literal("display index=" + index
                 + " kind=" + plan.kind()
                 + " runtime_spawned=" + runtimeSpawned
-                + " preview_fallback=" + previewFallback);
+                + " preview_fallback=" + previewFallback), false);
         return 1;
     }
 

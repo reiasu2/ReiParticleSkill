@@ -8,8 +8,6 @@ import com.reiasu.reiparticleskill.command.SkillActionCommand;
 import com.reiasu.reiparticleskill.command.port.APITestCommandPort;
 import com.reiasu.reiparticleskill.command.port.DisplayCommandPort;
 import com.reiasu.reiparticleskill.command.port.RailgunCommandPort;
-import com.reiasu.reiparticleskill.compat.version.ModLifecycleVersionBridge;
-import com.reiasu.reiparticleskill.compat.version.VersionBridgeRegistry;
 import com.reiasu.reiparticleskill.enchantments.SkillEnchantments;
 import com.reiasu.reiparticleskill.entities.SkillEntityTypes;
 import com.reiasu.reiparticleskill.end.respawn.EndRespawnStateBridge;
@@ -20,17 +18,20 @@ import com.reiasu.reiparticleskill.register.RuntimePortAutoRegistrar;
 import com.reiasu.reiparticleskill.sounds.SkillSoundEvents;
 import com.reiasu.reiparticleskill.config.SkillClientConfig;
 import com.mojang.logging.LogUtils;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.RegisterCommandsEvent;
+import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.fml.ModLoadingContext;
-import net.minecraftforge.fml.config.ModConfig;
-import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.config.ModConfig;
+import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
+import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import org.slf4j.Logger;
 
 @Mod(ReiParticleSkillForge.MOD_ID)
 public final class ReiParticleSkillForge {
     public static final String MOD_ID = "reiparticleskill";
     private static final Logger LOGGER = LogUtils.getLogger();
-    private static final ModLifecycleVersionBridge LIFECYCLE = VersionBridgeRegistry.lifecycle();
     private final EndRespawnStateBridge endRespawnBridge = new EndRespawnStateBridge();
 
     public ReiParticleSkillForge() {
@@ -40,25 +41,27 @@ public final class ReiParticleSkillForge {
         SkillSoundEvents.register(modBus);
         ModLoadingContext.get().registerConfig(ModConfig.Type.CLIENT, SkillClientConfig.SPEC);
 
-        LIFECYCLE.registerClientSetup(this::onClientSetup);
-        LIFECYCLE.registerCommandRegistration(this::onRegisterCommands);
-        LIFECYCLE.registerServerEndTick(server -> {
-            EndRespawnWatcher.tickServer(server, endRespawnBridge, LOGGER);
-            ServerListener.onServerPostTick(server);
+        modBus.addListener((FMLClientSetupEvent event) -> onClientSetup());
+
+        MinecraftForge.EVENT_BUS.addListener((RegisterCommandsEvent event) ->
+                onRegisterCommands(event.getDispatcher()));
+        MinecraftForge.EVENT_BUS.addListener((TickEvent.ServerTickEvent event) -> {
+            if (event.phase == TickEvent.Phase.END && event.getServer() != null) {
+                EndRespawnWatcher.tickServer(event.getServer(), endRespawnBridge, LOGGER);
+                ServerListener.onServerPostTick(event.getServer());
+            }
         });
 
         ReiParticlesAPI.init();
         ReiParticlesAPI.INSTANCE.loadScannerPackages();
         registerApiListeners();
         registerRuntimePorts();
-        ReiParticlesAPI.INSTANCE.registerParticleStyles();
         ReiParticlesAPI.INSTANCE.registerTest();
 
         LOGGER.info("ReiParticleSkill Forge runtime initialized");
     }
 
     private void onClientSetup() {
-        ReiParticlesAPI.INSTANCE.registerKeyBindings();
         LOGGER.info("ReiParticleSkill client setup completed");
     }
 

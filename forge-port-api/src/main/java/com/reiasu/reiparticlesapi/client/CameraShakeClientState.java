@@ -3,7 +3,6 @@
 package com.reiasu.reiparticlesapi.client;
 
 import com.reiasu.reiparticlesapi.ReiParticlesAPIForge;
-import com.reiasu.reiparticlesapi.compat.version.VersionBridgeRegistry;
 import com.reiasu.reiparticlesapi.network.packet.CameraShakeS2CPacket;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
@@ -55,7 +54,7 @@ public final class CameraShakeClientState {
         double amount = amplitude * Math.max(0.15, fade) * 0.45;
         float yawShake = (float) ((RANDOM.nextDouble() - 0.5) * amount);
         float pitchShake = (float) ((RANDOM.nextDouble() - 0.5) * amount);
-        VersionBridgeRegistry.clientCamera().applyShakeTurn(player, yawShake, pitchShake);
+        player.turn(yawShake, pitchShake);
 
         remainingTicks--;
         if (remainingTicks <= 0) {

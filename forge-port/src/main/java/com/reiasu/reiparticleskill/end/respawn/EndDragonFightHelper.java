@@ -1,9 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 // Copyright (C) 2025 Reiasu
-package com.reiasu.reiparticleskill.compat.version.forge120;
+package com.reiasu.reiparticleskill.end.respawn;
 
-import com.reiasu.reiparticleskill.compat.version.EndRespawnVersionBridge;
-import com.reiasu.reiparticleskill.end.respawn.EndRespawnPhase;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.dimension.end.EndDragonFight;
 import net.minecraft.world.phys.Vec3;
@@ -14,9 +12,16 @@ import java.lang.reflect.Modifier;
 import java.util.Collection;
 import java.util.Optional;
 
-public final class Forge120EndRespawnBridge implements EndRespawnVersionBridge {
-    @Override
-    public Optional<EndRespawnPhase> detectPhase(EndDragonFight fight) {
+/**
+ * Utility methods for reading dragon-respawn state from {@link EndDragonFight}
+ * via reflection (Forge 1.20.x mappings).
+ */
+public final class EndDragonFightHelper {
+
+    private EndDragonFightHelper() {
+    }
+
+    public static Optional<EndRespawnPhase> detectPhase(EndDragonFight fight) {
         Object stage = readRespawnStage(fight);
         if (stage == null) {
             return detectByRespawnTimer(fight);
@@ -51,8 +56,7 @@ public final class Forge120EndRespawnBridge implements EndRespawnVersionBridge {
         return detectByRespawnTimer(fight);
     }
 
-    @Override
-    public Vec3 portalCenter(EndDragonFight fight) {
+    public static Vec3 portalCenter(EndDragonFight fight) {
         try {
             Method m = fight.getClass().getDeclaredMethod("getPortalLocation");
             m.setAccessible(true);

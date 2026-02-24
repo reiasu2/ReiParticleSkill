@@ -5,8 +5,6 @@ package com.reiasu.reiparticlesapi;
 import com.reiasu.reiparticlesapi.animation.AnimateManager;
 import com.reiasu.reiparticlesapi.client.ClientTickEventForwarder;
 import com.reiasu.reiparticlesapi.commands.APICommand;
-import com.reiasu.reiparticlesapi.compat.version.ModLifecycleVersionBridge;
-import com.reiasu.reiparticlesapi.compat.version.VersionBridgeRegistry;
 import com.reiasu.reiparticlesapi.config.APIConfig;
 import com.reiasu.reiparticlesapi.display.DisplayEntityManager;
 import com.reiasu.reiparticlesapi.event.ForgeEventForwarder;
@@ -35,9 +33,11 @@ import net.minecraftforge.client.event.RegisterParticleProvidersEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.fml.DistExecutor;
+import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.config.ModConfig;
+import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import org.slf4j.Logger;
 
@@ -48,8 +48,6 @@ import java.util.concurrent.ConcurrentHashMap;
 public final class ReiParticlesAPIForge {
     public static final String MOD_ID = "reiparticlesapi";
     private static final Logger LOGGER = LogUtils.getLogger();
-    private static final ModLifecycleVersionBridge LIFECYCLE = VersionBridgeRegistry.lifecycle();
-
     public ReiParticlesAPIForge() {
         registerConfig();
         registerTickCallbacks();
@@ -66,17 +64,31 @@ public final class ReiParticlesAPIForge {
     }
 
     private void registerTickCallbacks() {
-        LIFECYCLE.registerClientSetup(this::onClientSetup);
-        LIFECYCLE.registerClientStartTick(() ->
-                DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> ClientTickEventForwarder::onClientStartTick)
-        );
-        LIFECYCLE.registerClientEndTick(this::onClientEndTick);
-        LIFECYCLE.registerServerStartTick(server -> ReiEventBus.call(new ServerPreTickEvent(server)));
-        LIFECYCLE.registerServerEndTick(this::onServerEndTick);
-
         var modBus = FMLJavaModLoadingContext.get().getModEventBus();
+        modBus.addListener((FMLClientSetupEvent event) -> onClientSetup());
         ReiModParticles.register(modBus);
         modBus.addListener(this::onRegisterParticleProviders);
+
+        MinecraftForge.EVENT_BUS.addListener((TickEvent.ClientTickEvent event) -> {
+            if (event.phase == TickEvent.Phase.START) {
+                DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> ClientTickEventForwarder::onClientStartTick);
+            }
+        });
+        MinecraftForge.EVENT_BUS.addListener((TickEvent.ClientTickEvent event) -> {
+            if (event.phase == TickEvent.Phase.END) {
+                onClientEndTick();
+            }
+        });
+        MinecraftForge.EVENT_BUS.addListener((TickEvent.ServerTickEvent event) -> {
+            if (event.phase == TickEvent.Phase.START && event.getServer() != null) {
+                ReiEventBus.call(new ServerPreTickEvent(event.getServer()));
+            }
+        });
+        MinecraftForge.EVENT_BUS.addListener((TickEvent.ServerTickEvent event) -> {
+            if (event.phase == TickEvent.Phase.END && event.getServer() != null) {
+                onServerEndTick(event.getServer());
+            }
+        });
     }
 
     private void registerCommands() {
@@ -95,7 +107,6 @@ public final class ReiParticlesAPIForge {
         ReiParticlesAPI.init();
         ForgeEventForwarder.init();
         ReiParticlesAPI.INSTANCE.loadScannerPackages();
-        ReiParticlesAPI.INSTANCE.registerParticleStyles();
         ReiParticlesAPI.INSTANCE.registerTest();
     }
 
@@ -149,7 +160,6 @@ public final class ReiParticlesAPIForge {
     // ---- Setup callbacks ----
 
     private void onClientSetup() {
-        ReiParticlesAPI.INSTANCE.registerKeyBindings();
         LOGGER.info("ReiParticlesAPI client setup completed");
     }
 

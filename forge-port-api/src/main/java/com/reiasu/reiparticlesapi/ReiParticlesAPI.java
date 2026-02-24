@@ -92,14 +92,6 @@ public final class ReiParticlesAPI {
         return testHooksRegistered;
     }
 
-    /** No-op stub — particle style registration is not yet implemented. */
-    public void registerParticleStyles() {
-    }
-
-    /** No-op stub — key binding registration is not yet implemented. */
-    public void registerKeyBindings() {
-    }
-
     /**
      * Registers a package for {@link com.reiasu.reiparticlesapi.annotations.events.EventListener @EventListener}
      * class scanning. The package is scanned via ClassGraph when {@link #initEventListeners()} is called.

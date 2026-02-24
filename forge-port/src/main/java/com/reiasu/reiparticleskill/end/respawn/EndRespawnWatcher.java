@@ -2,8 +2,6 @@
 // Copyright (C) 2025 Reiasu
 package com.reiasu.reiparticleskill.end.respawn;
 
-import com.reiasu.reiparticleskill.compat.version.EndRespawnVersionBridge;
-import com.reiasu.reiparticleskill.compat.version.VersionBridgeRegistry;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.boss.enderdragon.EndCrystal;
@@ -18,7 +16,6 @@ import java.util.Map;
 import java.util.Optional;
 
 public final class EndRespawnWatcher {
-    private static final EndRespawnVersionBridge BRIDGE = VersionBridgeRegistry.endRespawn();
     private static final double PORTAL_RADIUS = 14.0;
     private static final Map<String, SyntheticRespawnTracker> SYNTHETIC_TRACKERS = new HashMap<>();
 
@@ -38,12 +35,12 @@ public final class EndRespawnWatcher {
                 continue;
             }
 
-            Vec3 center = BRIDGE.portalCenter(fight);
+            Vec3 center = EndDragonFightHelper.portalCenter(fight);
             String levelId = level.dimension().location().toString();
             SyntheticRespawnTracker tracker = SYNTHETIC_TRACKERS.computeIfAbsent(levelId, ignored -> new SyntheticRespawnTracker());
 
             int crystalCount = resolveCrystalCount(fight, level, center);
-            Optional<EndRespawnPhase> phase = BRIDGE.detectPhase(fight);
+            Optional<EndRespawnPhase> phase = EndDragonFightHelper.detectPhase(fight);
             if (phase.isPresent()) {
                 tracker.observeDirectPhase(crystalCount);
             } else {
@@ -75,11 +72,11 @@ public final class EndRespawnWatcher {
                 continue;
             }
 
-            Vec3 center = BRIDGE.portalCenter(fight);
+            Vec3 center = EndDragonFightHelper.portalCenter(fight);
             int fightCrystals = Math.max(0, fight.getCrystalsAlive());
             int portalAreaCrystals = Math.max(0, countPortalCrystals(level, center));
             int resolvedCrystals = Math.max(fightCrystals, portalAreaCrystals);
-            Optional<EndRespawnPhase> directPhase = BRIDGE.detectPhase(fight);
+            Optional<EndRespawnPhase> directPhase = EndDragonFightHelper.detectPhase(fight);
             return Optional.of(new RespawnProbe(
                     level.dimension().location().toString(),
                     center,

@@ -34,16 +34,8 @@ class ReiParticlesAPITest {
         assertDoesNotThrow(() -> ReiParticlesAPI.INSTANCE.loadScannerPackages());
         assertTrue(ReiParticlesAPI.INSTANCE.scannersLoaded());
 
-        assertDoesNotThrow(() -> ReiParticlesAPI.INSTANCE.registerParticleStyles());
-        assertDoesNotThrow(() -> ReiParticlesAPI.INSTANCE.registerParticleStyles());
-        assertTrue(ReiParticlesAPI.INSTANCE.styleHooksRegistered());
-
         assertDoesNotThrow(() -> ReiParticlesAPI.INSTANCE.registerTest());
         assertDoesNotThrow(() -> ReiParticlesAPI.INSTANCE.registerTest());
         assertTrue(ReiParticlesAPI.INSTANCE.testHooksRegistered());
-
-        assertDoesNotThrow(() -> ReiParticlesAPI.INSTANCE.registerKeyBindings());
-        assertDoesNotThrow(() -> ReiParticlesAPI.INSTANCE.registerKeyBindings());
-        assertTrue(ReiParticlesAPI.INSTANCE.keyHooksRegistered());
     }
 }

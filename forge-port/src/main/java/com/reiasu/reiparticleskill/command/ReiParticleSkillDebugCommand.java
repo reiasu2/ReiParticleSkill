@@ -8,8 +8,6 @@ import com.reiasu.reiparticleskill.command.layout.DisplayIndexRouting;
 import com.reiasu.reiparticleskill.command.layout.DisplaySpawnProfile;
 import com.reiasu.reiparticleskill.barrages.SkillBarrageManager;
 import com.reiasu.reiparticleskill.util.geom.RelativeLocation;
-import com.reiasu.reiparticleskill.compat.version.CommandSourceVersionBridge;
-import com.reiasu.reiparticleskill.compat.version.VersionBridgeRegistry;
 import com.reiasu.reiparticleskill.display.group.layout.FormationLayerSpec;
 import com.reiasu.reiparticleskill.display.group.layout.SimpleSwordFormationLayout;
 import com.reiasu.reiparticleskill.display.group.layout.SwordFormationLayerPresets;
@@ -22,6 +20,7 @@ import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import org.slf4j.Logger;
 
@@ -31,8 +30,6 @@ import java.util.Optional;
 public final class ReiParticleSkillDebugCommand {
     private ReiParticleSkillDebugCommand() {
     }
-
-    private static final CommandSourceVersionBridge BRIDGE = VersionBridgeRegistry.commandSource();
 
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher, EndRespawnStateBridge bridge, Logger logger) {
         dispatcher.register(
@@ -68,12 +65,12 @@ public final class ReiParticleSkillDebugCommand {
     }
 
     private static int runDisplayIndex(CommandSourceStack source, int index) {
-        ServerLevel level = BRIDGE.level(source);
-        var pos = BRIDGE.position(source);
+        ServerLevel level = source.getLevel();
+        var pos = source.getPosition();
 
         Optional<DisplayIndexPlan> planOpt = DisplayIndexRouting.plan(index);
         if (planOpt.isEmpty()) {
-            BRIDGE.sendFailure(source, "index=" + index + " is not supported in migrated debug routing");
+            source.sendFailure(Component.literal("index=" + index + " is not supported in migrated debug routing"));
             return 0;
         }
 
@@ -83,9 +80,9 @@ public final class ReiParticleSkillDebugCommand {
             List<FormationLayerSpec> specs = SwordFormationLayerPresets.defaultLayerSpecs();
             int totalCount = specs.stream().mapToInt(FormationLayerSpec::count).sum();
             int emitted = DisplayDebugRuntime.previewByPlan(level, pos.x, pos.y, pos.z, plan);
-            BRIDGE.sendSuccess(source, "index=4 group layout ready, layers=" + specs.size()
+            source.sendSuccess(() -> Component.literal("index=4 group layout ready, layers=" + specs.size()
                     + ", total points=" + totalCount
-                    + ", preview particles=" + emitted);
+                    + ", preview particles=" + emitted), false);
             return 1;
         }
 
@@ -93,18 +90,18 @@ public final class ReiParticleSkillDebugCommand {
         if (profile.isPresent()) {
             DisplaySpawnProfile p = profile.get();
             int emitted = DisplayDebugRuntime.previewByPlan(level, pos.x, pos.y, pos.z, plan);
-            BRIDGE.sendSuccess(source, "index=" + index
+            source.sendSuccess(() -> Component.literal("index=" + index
                     + " kind=" + plan.kind()
                     + " yaw=" + p.orientation().yawDegrees()
                     + " pitch=" + p.orientation().pitchDegrees()
                     + " scale=" + p.targetScale()
                     + " speed=" + p.scaledSpeed()
-                    + " preview particles=" + emitted);
+                    + " preview particles=" + emitted), false);
             return 1;
         }
 
         int emitted = DisplayDebugRuntime.previewByPlan(level, pos.x, pos.y, pos.z, plan);
-        BRIDGE.sendSuccess(source, "index=" + index + " kind=" + plan.kind() + " preview particles=" + emitted);
+        source.sendSuccess(() -> Component.literal("index=" + index + " kind=" + plan.kind() + " preview particles=" + emitted), false);
         return 1;
     }
 
@@ -118,43 +115,43 @@ public final class ReiParticleSkillDebugCommand {
         }
         final int points = totalPoints;
 
-        var pos = BRIDGE.position(source);
-        int emitted = DisplayDebugRuntime.previewFormation(BRIDGE.level(source), pos.x, pos.y, pos.z);
+        var pos = source.getPosition();
+        int emitted = DisplayDebugRuntime.previewFormation(source.getLevel(), pos.x, pos.y, pos.z);
 
-        BRIDGE.sendSuccess(source, "formation preview layouts=" + layouts.size()
+        source.sendSuccess(() -> Component.literal("formation preview layouts=" + layouts.size()
                 + ", points=" + points
-                + ", preview particles=" + emitted);
+                + ", preview particles=" + emitted), false);
         return 1;
     }
 
     private static int runBarrageStatus(CommandSourceStack source) {
-        BRIDGE.sendSuccess(source, "barrage active=" + SkillBarrageManager.INSTANCE.activeCount());
+        source.sendSuccess(() -> Component.literal("barrage active=" + SkillBarrageManager.INSTANCE.activeCount()), false);
         return 1;
     }
 
     private static int runBarrageClear(CommandSourceStack source) {
         SkillBarrageManager.INSTANCE.clear();
-        BRIDGE.sendSuccess(source, "barrage cleared");
+        source.sendSuccess(() -> Component.literal("barrage cleared"), false);
         return 1;
     }
 
     private static int runRespawnPhase(CommandSourceStack source, EndRespawnStateBridge bridge, Logger logger, String id) {
         var phaseOpt = EndRespawnPhase.fromId(id);
         if (phaseOpt.isEmpty()) {
-            BRIDGE.sendFailure(source, "unknown phase id=" + id);
+            source.sendFailure(Component.literal("unknown phase id=" + id));
             return 0;
         }
 
-        var pos = BRIDGE.position(source);
-        bridge.setup(BRIDGE.level(source), pos);
-        bridge.next(BRIDGE.level(source), pos, phaseOpt.get(), logger);
-        BRIDGE.sendSuccess(source, "respawn phase -> " + phaseOpt.get().id());
+        var pos = source.getPosition();
+        bridge.setup(source.getLevel(), pos);
+        bridge.next(source.getLevel(), pos, phaseOpt.get(), logger);
+        source.sendSuccess(() -> Component.literal("respawn phase -> " + phaseOpt.get().id()), false);
         return 1;
     }
 
     private static int runRespawnCancel(CommandSourceStack source, EndRespawnStateBridge bridge, Logger logger) {
         bridge.cancel(logger);
-        BRIDGE.sendSuccess(source, "respawn bridge canceled");
+        source.sendSuccess(() -> Component.literal("respawn bridge canceled"), false);
         return 1;
     }
 
@@ -179,8 +176,8 @@ public final class ReiParticleSkillDebugCommand {
                 .orElse("none");
 
         String directorState = bridge.directorDebugState();
-        BRIDGE.sendSuccess(source, "respawn status: bridge={" + bridgeState + "} probe={" + probeState
-                + "} director={" + directorState + "}");
+        source.sendSuccess(() -> Component.literal("respawn status: bridge={" + bridgeState + "} probe={" + probeState
+                + "} director={" + directorState + "}"), false);
         return 1;
     }
 }

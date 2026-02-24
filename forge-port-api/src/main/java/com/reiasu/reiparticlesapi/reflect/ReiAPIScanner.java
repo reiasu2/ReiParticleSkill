@@ -138,15 +138,4 @@ public final class ReiAPIScanner {
         LOGGER.info("Registered scan package: {}", packageName);
     }
 
-    /** @deprecated Use {@link #registerPackage(Class)} instead. */
-    @Deprecated(forRemoval = true)
-    public static void registerPacket(Class<?> main) {
-        registerPackage(main);
-    }
-
-    /** @deprecated Use {@link #registerPackage(String)} instead. */
-    @Deprecated(forRemoval = true)
-    public static void registerPacket(String packageName) {
-        registerPackage(packageName);
-    }
 }
