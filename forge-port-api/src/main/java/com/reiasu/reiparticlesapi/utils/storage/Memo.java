@@ -14,6 +14,7 @@ import java.util.function.Supplier;
 public final class Memo<T> {
     private final Supplier<T> supplier;
     private T memo;
+    private boolean initialized;
 
     public Memo(Supplier<T> supplier) {
         this.supplier = supplier;
@@ -24,8 +25,9 @@ public final class Memo<T> {
     }
 
     public T get() {
-        if (memo == null) {
-            resetMemo();
+        if (!initialized) {
+            memo = supplier.get();
+            initialized = true;
         }
         return memo;
     }
@@ -36,7 +38,8 @@ public final class Memo<T> {
     }
 
     public Memo<T> resetMemo() {
-        this.memo = supplier.get();
+        initialized = false;
+        memo = null;
         return this;
     }
 }

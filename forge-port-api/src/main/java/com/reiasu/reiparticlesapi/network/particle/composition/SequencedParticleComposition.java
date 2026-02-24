@@ -180,7 +180,7 @@ public abstract class SequencedParticleComposition extends ParticleComposition {
 
         beforeDisplaySequenced((SortedMap<CompositionData, RelativeLocation>) locations);
         toggleScale(locations);
-        Math3DUtil.INSTANCE.rotateAsAxis(
+        Math3DUtil.rotateAsAxis(
                 new ArrayList<>(locations.values()), getAxis(), getRoll()
         );
         sequencedParticlesData.clear();
@@ -220,7 +220,7 @@ public abstract class SequencedParticleComposition extends ParticleComposition {
             setAxis(to);
             return;
         }
-        Math3DUtil.INSTANCE.rotatePointsToPoint(getParticleRotatedLocations(), to, getAxis());
+        Math3DUtil.rotatePointsToPoint(getParticleRotatedLocations(), to, getAxis());
         setAxis(to);
         toggleRelative();
     }
@@ -237,8 +237,8 @@ public abstract class SequencedParticleComposition extends ParticleComposition {
             setAxis(to);
             return;
         }
-        Math3DUtil.INSTANCE.rotateAsAxis(getParticleRotatedLocations(), getAxis(), radian);
-        Math3DUtil.INSTANCE.rotatePointsToPoint(getParticleRotatedLocations(), to, getAxis());
+        Math3DUtil.rotateAsAxis(getParticleRotatedLocations(), getAxis(), radian);
+        Math3DUtil.rotatePointsToPoint(getParticleRotatedLocations(), to, getAxis());
         setAxis(to);
         toggleRelative();
     }
@@ -252,7 +252,7 @@ public abstract class SequencedParticleComposition extends ParticleComposition {
             setRoll(getRoll() + Math.PI * 2);
         }
         if (!getClient()) return;
-        Math3DUtil.INSTANCE.rotateAsAxis(getParticleRotatedLocations(), getAxis(), radian);
+        Math3DUtil.rotateAsAxis(getParticleRotatedLocations(), getAxis(), radian);
         toggleRelative();
     }
 

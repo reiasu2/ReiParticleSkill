@@ -43,24 +43,20 @@ public final class ReiEventBus {
         ReiAPIScanner.registerPackage(packageName);
     }
 
+    /**
+     * Initializes all registered event listeners. Idempotent — only runs once.
+     * <p>
+     * If packages have been registered via {@link ReiAPIScanner#registerPackage(String)},
+     * performs a ClassGraph scan to discover {@link EventListener @EventListener} classes.
+     * Otherwise, logs an info message suggesting explicit registration.
+     */
     public void initListeners() {
         if (!initialized.compareAndSet(false, true)) {
             return;
         }
-        scanListeners();
-    }
-
-    /**
-     * Scans registered packages for {@link EventListener @EventListener} annotated classes
-     * using ClassGraph and registers them as event listeners.
-     * <p>
-     * If no packages have been registered via {@link ReiAPIScanner#registerPackage(String)},
-     * this is effectively a no-op and logs an info message suggesting explicit registration.
-     */
-    public void scanListeners() {
         ReiAPIScanner scanner = ReiAPIScanner.INSTANCE;
         if (scanner.getScannedPackageCount() == 0) {
-            LOGGER.info("scanListeners(): no packages registered for scanning. "
+            LOGGER.info("initListeners(): no packages registered for scanning. "
                     + "Use registerAnnotatedClass() or registerListenerInstance() for explicit registration.");
             return;
         }
@@ -71,10 +67,10 @@ public final class ReiEventBus {
                 registerAnnotatedClass(clazz);
                 count++;
             } catch (Throwable t) {
-                LOGGER.error("scanListeners(): failed to register {}", clazz.getName(), t);
+                LOGGER.error("initListeners(): failed to register {}", clazz.getName(), t);
             }
         }
-        LOGGER.info("scanListeners(): discovered and registered {} @EventListener classes", count);
+        LOGGER.info("initListeners(): discovered and registered {} @EventListener classes", count);
     }
 
     public void registerAnnotatedClass(Class<?> listenerClass) {

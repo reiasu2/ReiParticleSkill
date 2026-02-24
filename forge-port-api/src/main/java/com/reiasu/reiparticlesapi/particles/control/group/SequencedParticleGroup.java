@@ -2,7 +2,7 @@
 // Copyright (C) 2025 Reiasu
 package com.reiasu.reiparticlesapi.particles.control.group;
 
-import com.reiasu.reiparticlesapi.ReiParticlesConstants;
+import com.mojang.logging.LogUtils;
 import com.reiasu.reiparticlesapi.particles.Controllable;
 import com.reiasu.reiparticlesapi.particles.ControllableParticle;
 import com.reiasu.reiparticlesapi.particles.ParticleDisplayer;
@@ -13,6 +13,8 @@ import com.reiasu.reiparticlesapi.utils.MathDataUtil;
 import com.reiasu.reiparticlesapi.utils.RelativeLocation;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.world.phys.Vec3;
+
+import org.slf4j.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,6 +35,7 @@ import java.util.function.Function;
 @Deprecated
 public abstract class SequencedParticleGroup extends ControllableParticleGroup {
 
+    private static final Logger LOGGER = LogUtils.getLogger();
     private long[] displayedStatus;
     private int particleDisplayedCount;
     private int particleLinkageDisplayCurrentIndex;
@@ -126,13 +129,13 @@ public abstract class SequencedParticleGroup extends ControllableParticleGroup {
     // ---- Status management ----
 
     public void setSingleStatus(int index, boolean status) {
-        int page = MathDataUtil.INSTANCE.getStoragePageLong(index);
-        int bit = MathDataUtil.INSTANCE.getStorageWithBitLong(index);
+        int page = MathDataUtil.getStoragePageLong(index);
+        int bit = MathDataUtil.getStorageWithBitLong(index);
         long container = getDisplayedStatus()[page];
-        boolean currentStatus = MathDataUtil.INSTANCE.getStatusLong(container, bit) == 1;
+        boolean currentStatus = MathDataUtil.getStatusLong(container, bit) == 1;
         if (currentStatus == status) return;
         toggleFromStatus(index, status);
-        getDisplayedStatus()[page] = MathDataUtil.INSTANCE.setStatusLong(container, bit, status);
+        getDisplayedStatus()[page] = MathDataUtil.setStatusLong(container, bit, status);
     }
 
     public boolean addSingle() {
@@ -211,7 +214,7 @@ public abstract class SequencedParticleGroup extends ControllableParticleGroup {
             for (int bit = 1; bit < 65; bit++) {
                 int index = page * 64 + bit - 1;
                 if (index >= sequencedParticles.size()) break;
-                int status = MathDataUtil.INSTANCE.getStatusLong(container, bit);
+                int status = MathDataUtil.getStatusLong(container, bit);
                 toggleFromStatus(index, status == 1);
             }
         }
@@ -226,7 +229,7 @@ public abstract class SequencedParticleGroup extends ControllableParticleGroup {
     @Override
     public void scale(double d) {
         if (d < 0.0) {
-            ReiParticlesConstants.logger.error("scale can not be less than zero");
+            LOGGER.error("scale can not be less than zero");
             return;
         }
         setScale(d);
@@ -256,7 +259,7 @@ public abstract class SequencedParticleGroup extends ControllableParticleGroup {
     public void rotateToPoint(RelativeLocation to) {
         if (!getDisplayed()) return;
         List<RelativeLocation> locs = extractLocations();
-        Math3DUtil.INSTANCE.rotatePointsToPoint(locs, to, getAxis());
+        Math3DUtil.rotatePointsToPoint(locs, to, getAxis());
         teleportParticlesToRelative();
         setAxis(to.normalize());
     }
@@ -265,7 +268,7 @@ public abstract class SequencedParticleGroup extends ControllableParticleGroup {
     public void rotateAsAxis(double angle) {
         if (!getDisplayed()) return;
         List<RelativeLocation> locs = extractLocations();
-        Math3DUtil.INSTANCE.rotateAsAxis(locs, getAxis(), angle);
+        Math3DUtil.rotateAsAxis(locs, getAxis(), angle);
         teleportParticlesToRelative();
     }
 
@@ -273,9 +276,9 @@ public abstract class SequencedParticleGroup extends ControllableParticleGroup {
     public void rotateToWithAngle(RelativeLocation to, double angle) {
         if (!getDisplayed()) return;
         List<RelativeLocation> locs = extractLocations();
-        Math3DUtil.INSTANCE.rotatePointsToPoint(locs, to, getAxis());
+        Math3DUtil.rotatePointsToPoint(locs, to, getAxis());
         List<RelativeLocation> locs2 = extractLocations();
-        Math3DUtil.INSTANCE.rotateAsAxis(locs2, to.normalize(), angle);
+        Math3DUtil.rotateAsAxis(locs2, to.normalize(), angle);
         teleportParticlesToRelative();
         setAxis(to.normalize());
     }
@@ -340,10 +343,10 @@ public abstract class SequencedParticleGroup extends ControllableParticleGroup {
             getParticles().remove(puuid);
             getParticlesLocations().remove(controllable);
         }
-        int page = MathDataUtil.INSTANCE.getStoragePageLong(index);
+        int page = MathDataUtil.getStoragePageLong(index);
         long container = getDisplayedStatus()[page];
-        int bit = MathDataUtil.INSTANCE.getStorageWithBitLong(index);
-        MathDataUtil.INSTANCE.setStatusLong(container, bit, status);
+        int bit = MathDataUtil.getStorageWithBitLong(index);
+        MathDataUtil.setStatusLong(container, bit, status);
     }
 
     private void toggleScale(SortedMap<SequencedParticleRelativeData, RelativeLocation> locations) {

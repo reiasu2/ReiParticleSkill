@@ -329,7 +329,7 @@ public abstract class ParticleComposition
         Map<CompositionData, RelativeLocation> locations = getParticles();
         beforeDisplay(locations);
         toggleScale(locations);
-        Math3DUtil.INSTANCE.rotateAsAxis(
+        Math3DUtil.rotateAsAxis(
                 new ArrayList<>(locations.values()), axis, roll
         );
         for (Map.Entry<CompositionData, RelativeLocation> entry : locations.entrySet()) {
@@ -411,7 +411,7 @@ public abstract class ParticleComposition
             axis = to;
             return;
         }
-        Math3DUtil.INSTANCE.rotatePointsToPoint(particleRotatedLocations, to, axis);
+        Math3DUtil.rotatePointsToPoint(particleRotatedLocations, to, axis);
         axis = to;
         toggleRelative();
     }
@@ -427,8 +427,8 @@ public abstract class ParticleComposition
             axis = to;
             return;
         }
-        Math3DUtil.INSTANCE.rotateAsAxis(particleRotatedLocations, axis, radian);
-        Math3DUtil.INSTANCE.rotatePointsToPoint(particleRotatedLocations, to, axis);
+        Math3DUtil.rotateAsAxis(particleRotatedLocations, axis, radian);
+        Math3DUtil.rotatePointsToPoint(particleRotatedLocations, to, axis);
         axis = to;
         toggleRelative();
     }
@@ -441,24 +441,24 @@ public abstract class ParticleComposition
             roll += Math.PI * 2;
         }
         if (!client) return;
-        Math3DUtil.INSTANCE.rotateAsAxis(particleRotatedLocations, axis, radian);
+        Math3DUtil.rotateAsAxis(particleRotatedLocations, axis, radian);
         toggleRelative();
     }
 
     // ─── Pre-rotation helpers (used before display) ──────────────────────
 
     public void preRotateTo(Map<CompositionData, RelativeLocation> map, RelativeLocation to) {
-        Math3DUtil.INSTANCE.rotatePointsToPoint(new ArrayList<>(map.values()), to, axis);
+        Math3DUtil.rotatePointsToPoint(new ArrayList<>(map.values()), to, axis);
         axis = to;
     }
 
     public void preRotateAsAxis(Map<CompositionData, RelativeLocation> map, RelativeLocation axis, double angle) {
-        Math3DUtil.INSTANCE.rotateAsAxis(new ArrayList<>(map.values()), axis, angle);
+        Math3DUtil.rotateAsAxis(new ArrayList<>(map.values()), axis, angle);
         this.axis = axis;
     }
 
     public void preRotateAsAxis(Map<CompositionData, RelativeLocation> map, double angle) {
-        Math3DUtil.INSTANCE.rotateAsAxis(new ArrayList<>(map.values()), axis, angle);
+        Math3DUtil.rotateAsAxis(new ArrayList<>(map.values()), axis, angle);
     }
 
     // ─── Controllable interface support ───────────────────────────────────

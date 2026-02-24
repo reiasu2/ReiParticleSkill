@@ -2,22 +2,11 @@
 // Copyright (C) 2025 Reiasu
 package com.reiasu.reiparticlesapi.barrages;
 
-import com.reiasu.reiparticlesapi.display.DisplayEntity;
-import com.reiasu.reiparticlesapi.display.DisplayEntityManager;
-import com.reiasu.reiparticlesapi.network.particle.ServerController;
-import com.reiasu.reiparticlesapi.network.particle.ServerParticleGroup;
-import com.reiasu.reiparticlesapi.network.particle.ServerParticleGroupManager;
-import com.reiasu.reiparticlesapi.network.particle.emitters.ParticleEmitters;
-import com.reiasu.reiparticlesapi.network.particle.emitters.ParticleEmittersManager;
-import com.reiasu.reiparticlesapi.network.particle.style.ParticleGroupStyle;
-import com.reiasu.reiparticlesapi.network.particle.style.ParticleStyleManager;
-import com.reiasu.reiparticlesapi.renderer.RenderEntity;
-import com.reiasu.reiparticlesapi.renderer.server.ServerRenderEntityManager;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedDeque;
 
@@ -51,29 +40,16 @@ public final class BarrageManager {
     }
 
     public void doTick() {
-        Iterator<Barrage> it = barrages.iterator();
-        while (it.hasNext()) {
-            Barrage b = it.next();
+        barrages.removeIf(b -> {
             b.tick();
-            if (!b.getValid()) {
-                it.remove();
-            }
-        }
+            return !b.getValid();
+        });
     }
 
     private void spawnOnWorld(Barrage barrage) {
-        ServerController<?> control = barrage.getBindControl();
-        if (control instanceof ServerParticleGroup spg) {
-            ServerParticleGroupManager.INSTANCE.addParticleGroup(spg, barrage.getLoc(), barrage.getWorld());
-        } else if (control instanceof ParticleGroupStyle style) {
-            ParticleStyleManager.spawnStyle(barrage.getWorld(), barrage.getLoc(), style);
-        } else if (control instanceof RenderEntity re) {
-            ServerRenderEntityManager.INSTANCE.spawn(re);
-        } else if (control instanceof ParticleEmitters emitters) {
-            ParticleEmittersManager.spawnEmitters(emitters);
-        } else if (control instanceof DisplayEntity de) {
-            DisplayEntityManager.INSTANCE.spawn(de);
-        }
+        ServerLevel world = barrage.getWorld();
+        Vec3 loc = barrage.getLoc();
+        barrage.getBindControl().spawnInWorld(world, loc);
         barrage.setLaunch(true);
     }
 }

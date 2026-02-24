@@ -13,8 +13,6 @@ import net.minecraft.world.phys.Vec3;
  * and movement resolution.
  */
 public final class PhysicsUtil {
-    public static final PhysicsUtil INSTANCE = new PhysicsUtil();
-
     private PhysicsUtil() {
     }
 
@@ -28,7 +26,7 @@ public final class PhysicsUtil {
      * @param world      the world to raycast in
      * @return the block hit result
      */
-    public BlockHitResult collide(Vec3 currentPos, Vec3 velocity, Level world) {
+    public static BlockHitResult collide(Vec3 currentPos, Vec3 velocity, Level world) {
         ClipContext context = new ClipContext(
                 currentPos,
                 currentPos.add(velocity),
@@ -45,7 +43,7 @@ public final class PhysicsUtil {
      * @param res the block hit result
      * @return a position slightly offset from the hit point along the block normal
      */
-    public Vec3 fixBeforeCollidePosition(BlockHitResult res) {
+    public static Vec3 fixBeforeCollidePosition(BlockHitResult res) {
         Direction dir = res.getDirection();
         Vec3 normal = new Vec3(dir.getStepX(), dir.getStepY(), dir.getStepZ());
         Vec3 location = res.getLocation();
@@ -60,10 +58,10 @@ public final class PhysicsUtil {
     }
 
     public static RelativeLocation steer(RelativeLocation velocity, RelativeLocation desired, double blend) {
-        double clampedBlend = Math3DUtil.INSTANCE.clamp(blend, 0.0, 1.0);
-        velocity.setX(Math3DUtil.INSTANCE.lerp(velocity.getX(), desired.getX(), clampedBlend));
-        velocity.setY(Math3DUtil.INSTANCE.lerp(velocity.getY(), desired.getY(), clampedBlend));
-        velocity.setZ(Math3DUtil.INSTANCE.lerp(velocity.getZ(), desired.getZ(), clampedBlend));
+        double clampedBlend = Math3DUtil.clamp(blend, 0.0, 1.0);
+        velocity.setX(Math3DUtil.lerp(velocity.getX(), desired.getX(), clampedBlend));
+        velocity.setY(Math3DUtil.lerp(velocity.getY(), desired.getY(), clampedBlend));
+        velocity.setZ(Math3DUtil.lerp(velocity.getZ(), desired.getZ(), clampedBlend));
         return velocity;
     }
 

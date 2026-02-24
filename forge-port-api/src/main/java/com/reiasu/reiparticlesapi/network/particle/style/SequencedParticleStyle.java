@@ -250,7 +250,7 @@ public abstract class SequencedParticleStyle extends ParticleGroupStyle {
         SortedMap<SortedStyleData, RelativeLocation> locations = getCurrentFramesSequenced();
         sequencedParticles.clear();
         List<RelativeLocation> locs = new ArrayList<>(locations.values());
-        Math3DUtil.INSTANCE.rotateAsAxis(locs, getAxis(), getRotate());
+        Math3DUtil.rotateAsAxis(locs, getAxis(), getRotate());
         toggleScale(locations);
 
         for (Map.Entry<SortedStyleData, RelativeLocation> entry : locations.entrySet()) {

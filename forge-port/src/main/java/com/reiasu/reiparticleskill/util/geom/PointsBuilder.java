@@ -48,7 +48,7 @@ public final class PointsBuilder {
     }
 
     public PointsBuilder addPolygonInCircle(int sides, int pointsPerEdge, double radius) {
-        List<RelativeLocation> vertices = Math3DUtil.INSTANCE.getPolygonInCircleVertices(sides, radius);
+        List<RelativeLocation> vertices = Math3DUtil.getPolygonInCircleVertices(sides, radius);
         if (vertices.size() < 3) {
             return this;
         }
@@ -72,8 +72,9 @@ public final class PointsBuilder {
         return this;
     }
 
+    @Deprecated
     public PointsBuilder addWith(Function<Math3DUtil, Collection<RelativeLocation>> generator) {
-        Collection<RelativeLocation> generated = generator.apply(Math3DUtil.INSTANCE);
+        Collection<RelativeLocation> generated = generator.apply(null);
         if (generated != null) {
             points.addAll(generated);
         }
@@ -97,7 +98,7 @@ public final class PointsBuilder {
         if (dir.length() == 0.0) {
             return this;
         }
-        double yaw = Math3DUtil.INSTANCE.getYawFromLocation(dir);
+        double yaw = Math3DUtil.getYawFromLocation(dir);
         return rotateAsAxis(yaw);
     }
 

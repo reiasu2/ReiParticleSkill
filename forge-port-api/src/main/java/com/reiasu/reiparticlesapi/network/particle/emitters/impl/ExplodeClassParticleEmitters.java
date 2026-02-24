@@ -70,7 +70,7 @@ public final class ExplodeClassParticleEmitters extends ClassParticleEmitters {
                                       RelativeLocation spawnPos, Level spawnWorld,
                                       float particleLerpProgress, float posLerpProgress) {
         if (data instanceof ControllableParticleData cpd) {
-            cpd.setParticleColor(Math3DUtil.INSTANCE.colorOf(
+            cpd.setParticleColor(Math3DUtil.colorOf(
                     200 + random.nextInt(55),
                     200 + random.nextInt(55),
                     200 + random.nextInt(55)));

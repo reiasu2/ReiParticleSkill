@@ -2,9 +2,8 @@
 // Copyright (C) 2025 Reiasu
 package com.reiasu.reiparticlesapi.utils;
 
-import com.reiasu.reiparticlesapi.ReiParticlesConstants;
-import net.minecraft.world.level.Level;
-import net.minecraft.world.phys.Vec3;
+import com.mojang.logging.LogUtils;
+import org.slf4j.Logger;
 
 import java.util.function.Supplier;
 
@@ -17,23 +16,9 @@ import java.util.function.Supplier;
  */
 public final class ReflectUtil {
 
-    public static final ReflectUtil INSTANCE = new ReflectUtil();
+    private static final Logger LOGGER = LogUtils.getLogger();
 
     private ReflectUtil() {
-    }
-
-    /**
-     * Returns the {@link Vec3} class reference.
-     */
-    public static Class<Vec3> getVec3Class() {
-        return Vec3.class;
-    }
-
-    /**
-     * Returns the {@link Level} class reference.
-     */
-    public static Class<Level> getLevelClass() {
-        return Level.class;
     }
 
     /**
@@ -46,7 +31,7 @@ public final class ReflectUtil {
         long start = System.currentTimeMillis();
         invoker.run();
         long end = System.currentTimeMillis();
-        ReiParticlesConstants.logger.info("Executed " + name + " completed: took " + (end - start) + "ms");
+        LOGGER.info("Executed " + name + " completed: took " + (end - start) + "ms");
     }
 
     /**
@@ -68,7 +53,7 @@ public final class ReflectUtil {
         long start = System.currentTimeMillis();
         T result = invoker.get();
         long end = System.currentTimeMillis();
-        ReiParticlesConstants.logger.info("Executed and returned " + name + " completed: took " + (end - start) + "ms");
+        LOGGER.info("Executed and returned " + name + " completed: took " + (end - start) + "ms");
         return result;
     }
 

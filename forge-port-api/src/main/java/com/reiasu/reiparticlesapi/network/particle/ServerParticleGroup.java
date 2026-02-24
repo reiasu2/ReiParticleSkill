@@ -59,6 +59,11 @@ public abstract class ServerParticleGroup implements ServerController<ServerPart
         this(32.0);
     }
 
+    @Override
+    public void spawnInWorld(ServerLevel world, Vec3 pos) {
+        ServerParticleGroupManager.INSTANCE.addParticleGroup(this, pos, world);
+    }
+
     // ---- Getters / Setters ----
 
     public double getVisibleRange() { return visibleRange; }

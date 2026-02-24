@@ -13,24 +13,22 @@ import java.util.List;
  * Each method returns a list of RelativeLocations forming the numeral shape.
  */
 public final class MathPresets {
-    public static final MathPresets INSTANCE = new MathPresets();
-
     private MathPresets() {
     }
 
-    public List<RelativeLocation> romaI(double scale) {
+    public static List<RelativeLocation> romaI(double scale) {
         requireMinScale(scale);
         PointsBuilder builder = new PointsBuilder();
         int preLineCount = Math.max((int) Math.round(5.0 * scale), 1);
         double height = 0.25 * scale;
-        double weight = 0.125 * scale;
-        builder.addLine(new RelativeLocation(-weight, height, 0), new RelativeLocation(weight, height, 0), preLineCount)
-                .addLine(new RelativeLocation(-weight, -height, 0), new RelativeLocation(weight, -height, 0), preLineCount)
+        double width = 0.125 * scale;
+        builder.addLine(new RelativeLocation(-width, height, 0), new RelativeLocation(width, height, 0), preLineCount)
+                .addLine(new RelativeLocation(-width, -height, 0), new RelativeLocation(width, -height, 0), preLineCount)
                 .addLine(new RelativeLocation(0, height, 0), new RelativeLocation(0, -height, 0), preLineCount);
         return builder.create();
     }
 
-    public List<RelativeLocation> romaII(double scale) {
+    public static List<RelativeLocation> romaII(double scale) {
         requireMinScale(scale);
         ArrayList<RelativeLocation> res = new ArrayList<>();
         double offset = getRomaOffsetX(scale) / 2.0;
@@ -43,7 +41,7 @@ public final class MathPresets {
         return res;
     }
 
-    public List<RelativeLocation> romaIII(double scale) {
+    public static List<RelativeLocation> romaIII(double scale) {
         requireMinScale(scale);
         ArrayList<RelativeLocation> res = new ArrayList<>();
         double offset = getRomaOffsetX(scale);
@@ -57,7 +55,7 @@ public final class MathPresets {
         return res;
     }
 
-    public List<RelativeLocation> romaIV(double scale) {
+    public static List<RelativeLocation> romaIV(double scale) {
         requireMinScale(scale);
         ArrayList<RelativeLocation> res = new ArrayList<>();
         double offset = getRomaOffsetX(scale) / 2.0;
@@ -70,18 +68,18 @@ public final class MathPresets {
         return res;
     }
 
-    public List<RelativeLocation> romaV(double scale) {
+    public static List<RelativeLocation> romaV(double scale) {
         requireMinScale(scale);
         PointsBuilder builder = new PointsBuilder();
         int preLineCount = Math.max((int) Math.round(5.0 * scale), 1);
         double height = 0.25 * scale;
-        double weight = 0.125 * scale;
-        builder.addLine(new RelativeLocation(-weight, height, 0), new RelativeLocation(0, -height, 0), preLineCount)
-                .addLine(new RelativeLocation(weight, height, 0), new RelativeLocation(0, -height, 0), preLineCount);
+        double width = 0.125 * scale;
+        builder.addLine(new RelativeLocation(-width, height, 0), new RelativeLocation(0, -height, 0), preLineCount)
+                .addLine(new RelativeLocation(width, height, 0), new RelativeLocation(0, -height, 0), preLineCount);
         return builder.create();
     }
 
-    public List<RelativeLocation> romaVI(double scale) {
+    public static List<RelativeLocation> romaVI(double scale) {
         requireMinScale(scale);
         ArrayList<RelativeLocation> res = new ArrayList<>();
         double offset = getRomaOffsetX(scale) / 2.0;
@@ -94,7 +92,7 @@ public final class MathPresets {
         return res;
     }
 
-    public List<RelativeLocation> romaVII(double scale) {
+    public static List<RelativeLocation> romaVII(double scale) {
         requireMinScale(scale);
         ArrayList<RelativeLocation> res = new ArrayList<>();
         double offset = getRomaOffsetX(scale);
@@ -108,7 +106,7 @@ public final class MathPresets {
         return res;
     }
 
-    public List<RelativeLocation> romaVIII(double scale) {
+    public static List<RelativeLocation> romaVIII(double scale) {
         requireMinScale(scale);
         ArrayList<RelativeLocation> res = new ArrayList<>();
         double offset = getRomaOffsetX(scale) / 2.0;
@@ -121,7 +119,7 @@ public final class MathPresets {
         return res;
     }
 
-    public List<RelativeLocation> romaIX(double scale) {
+    public static List<RelativeLocation> romaIX(double scale) {
         requireMinScale(scale);
         ArrayList<RelativeLocation> res = new ArrayList<>();
         double offset = getRomaOffsetX(scale) / 2.0;
@@ -134,18 +132,18 @@ public final class MathPresets {
         return res;
     }
 
-    public List<RelativeLocation> romaX(double scale) {
+    public static List<RelativeLocation> romaX(double scale) {
         requireMinScale(scale);
         PointsBuilder builder = new PointsBuilder();
         int preLineCount = Math.max((int) Math.round(5.0 * scale), 1);
         double height = 0.25 * scale;
-        double weight = 0.125 * scale;
-        builder.addLine(new RelativeLocation(-weight, height, 0), new RelativeLocation(weight, -height, 0), preLineCount)
-                .addLine(new RelativeLocation(-weight, -height, 0), new RelativeLocation(weight, height, 0), preLineCount);
+        double width = 0.125 * scale;
+        builder.addLine(new RelativeLocation(-width, height, 0), new RelativeLocation(width, -height, 0), preLineCount)
+                .addLine(new RelativeLocation(-width, -height, 0), new RelativeLocation(width, height, 0), preLineCount);
         return builder.create();
     }
 
-    public List<RelativeLocation> romaXI(double scale) {
+    public static List<RelativeLocation> romaXI(double scale) {
         requireMinScale(scale);
         ArrayList<RelativeLocation> res = new ArrayList<>();
         double offset = getRomaOffsetX(scale) / 2.0;
@@ -158,7 +156,7 @@ public final class MathPresets {
         return res;
     }
 
-    public List<RelativeLocation> romaXII(double scale) {
+    public static List<RelativeLocation> romaXII(double scale) {
         requireMinScale(scale);
         ArrayList<RelativeLocation> res = new ArrayList<>();
         double offset = getRomaOffsetX(scale) / 2.0;
@@ -171,15 +169,15 @@ public final class MathPresets {
         return res;
     }
 
-    public double getRomaOffsetX(double scale) {
+    public static double getRomaOffsetX(double scale) {
         return 0.125 * scale * 2.0;
     }
 
-    public double getRomaOffsetY(double scale) {
+    public static double getRomaOffsetY(double scale) {
         return 0.25 * scale * 2.0;
     }
 
-    public List<RelativeLocation> withRomaNumber(int i, double scale) {
+    public static List<RelativeLocation> withRomaNumber(int i, double scale) {
         if (i < 1 || i > 12) {
             throw new IllegalArgumentException("Only supports Roman numerals 1-12");
         }

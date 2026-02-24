@@ -12,8 +12,8 @@ public final class DisplayCommandLayout {
     }
 
     public static DisplayOrientation computeOrientation(RelativeLocation lookAt) {
-        double yaw = Math3DUtil.INSTANCE.getYawFromLocation(lookAt) * 180.0 / Math.PI;
-        double pitch = Math3DUtil.INSTANCE.getPitchFromLocation(lookAt) * 180.0 / Math.PI;
+        double yaw = Math3DUtil.getYawFromLocation(lookAt) * 180.0 / Math.PI;
+        double pitch = Math3DUtil.getPitchFromLocation(lookAt) * 180.0 / Math.PI;
         return new DisplayOrientation((float) yaw, (float) pitch);
     }
 

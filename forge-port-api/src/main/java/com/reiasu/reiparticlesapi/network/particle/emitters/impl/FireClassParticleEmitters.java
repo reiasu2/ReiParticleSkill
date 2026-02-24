@@ -83,7 +83,7 @@ public final class FireClassParticleEmitters extends ClassParticleEmitters {
             double spreadX = (random.nextDouble() - 0.5) * 0.02;
             double spreadZ = (random.nextDouble() - 0.5) * 0.02;
             data.setVelocity(new Vec3(spreadX, upSpeed, spreadZ));
-            data.setParticleColor(Math3DUtil.INSTANCE.colorOf(
+            data.setParticleColor(Math3DUtil.colorOf(
                     200 + random.nextInt(55),
                     100 + random.nextInt(100),
                     random.nextInt(50)));

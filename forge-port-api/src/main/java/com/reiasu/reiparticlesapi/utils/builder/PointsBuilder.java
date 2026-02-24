@@ -101,7 +101,7 @@ public class PointsBuilder {
     }
 
     public PointsBuilder addPolygonInCircle(int sides, int pointsPerEdge, double radius) {
-        List<RelativeLocation> vertices = Math3DUtil.INSTANCE.getPolygonInCircleVertices(sides, radius);
+        List<RelativeLocation> vertices = Math3DUtil.getPolygonInCircleVertices(sides, radius);
         if (vertices.size() < 3) {
             return this;
         }
@@ -118,8 +118,12 @@ public class PointsBuilder {
         return this;
     }
 
+    /**
+     * @deprecated Math3DUtil is now all-static. Use {@code addAll(generator.apply(null))} or call Math3DUtil methods directly.
+     */
+    @Deprecated
     public PointsBuilder addWith(Function<Math3DUtil, Collection<RelativeLocation>> generator) {
-        Collection<RelativeLocation> generated = generator.apply(Math3DUtil.INSTANCE);
+        Collection<RelativeLocation> generated = generator.apply(null);
         if (generated != null) {
             points.addAll(generated);
         }
@@ -161,7 +165,7 @@ public class PointsBuilder {
         if (dir.length() == 0.0) {
             return this;
         }
-        double yaw = Math3DUtil.INSTANCE.getYawFromLocation(dir);
+        double yaw = Math3DUtil.getYawFromLocation(dir);
         rotateAsAxis(yaw);
         return this;
     }

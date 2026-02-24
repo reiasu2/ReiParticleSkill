@@ -3,6 +3,7 @@
 package com.reiasu.reiparticlesapi.network.particle.emitters;
 
 import com.reiasu.reiparticlesapi.network.particle.ServerController;
+import com.reiasu.reiparticlesapi.network.particle.emitters.ParticleEmittersManager;
 import io.netty.buffer.Unpooled;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
@@ -49,6 +50,11 @@ public abstract class ParticleEmitters implements ServerController<ParticleEmitt
     private Vec3 position = Vec3.ZERO;
     private double visibleRange = 256.0;
     private int throttleInterval = 1;
+
+    @Override
+    public void spawnInWorld(ServerLevel world, Vec3 pos) {
+        ParticleEmittersManager.spawnEmitters(this);
+    }
 
     public ResourceLocation getEmittersID() {
         return emittersID;

@@ -6,6 +6,7 @@ import com.reiasu.reiparticlesapi.network.particle.ServerController;
 import com.reiasu.reiparticlesapi.renderer.server.ServerRenderEntityManager;
 import com.reiasu.reiparticlesapi.utils.RelativeLocation;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 
@@ -39,6 +40,11 @@ public abstract class RenderEntity implements ServerController<RenderEntity> {
 
     public RenderEntity() {
         this(null, Vec3.ZERO);
+    }
+
+    @Override
+    public void spawnInWorld(ServerLevel world, Vec3 pos) {
+        ServerRenderEntityManager.INSTANCE.spawn(this);
     }
 
     // ---- Abstract methods ----

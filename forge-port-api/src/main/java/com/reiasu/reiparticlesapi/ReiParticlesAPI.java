@@ -74,7 +74,6 @@ public final class ReiParticlesAPI {
             LOGGER.warn("loadScannerPackages() called before init() — call init() first");
         }
         LOGGER.info("ReiParticlesAPI scanner packages loaded");
-        ReiEventBus.INSTANCE.scanListeners();
         ReiEventBus.INSTANCE.initListeners();
     }
 

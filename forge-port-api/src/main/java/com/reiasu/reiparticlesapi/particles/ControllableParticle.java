@@ -376,7 +376,7 @@ public abstract class ControllableParticle extends TextureSheetParticle {
     }
 
     public void rotateParticleTo(Vector3f target) {
-        float[] angles = Math3DUtil.INSTANCE.calculateEulerAnglesToPointArray(target);
+        float[] angles = Math3DUtil.calculateEulerAnglesToPointArray(target);
         this.updateRotate = true;
         this.lastRotate = new Vector3f(angles[0], angles[1], angles[2]);
     }
@@ -384,7 +384,7 @@ public abstract class ControllableParticle extends TextureSheetParticle {
     // ---- Color helpers ----
 
     public void colorOfRGB(int r, int g, int b) {
-        setColor(Math3DUtil.INSTANCE.colorOf(
+        setColor(Math3DUtil.colorOf(
                 Mth.clamp(r, 0, 255),
                 Mth.clamp(g, 0, 255),
                 Mth.clamp(b, 0, 255)));
@@ -399,7 +399,7 @@ public abstract class ControllableParticle extends TextureSheetParticle {
     }
 
     public void colorOfRGBA(int r, int g, int b, float alpha) {
-        setColor(Math3DUtil.INSTANCE.colorOf(
+        setColor(Math3DUtil.colorOf(
                 Mth.clamp(r, 0, 255),
                 Mth.clamp(g, 0, 255),
                 Mth.clamp(b, 0, 255)));
@@ -410,15 +410,15 @@ public abstract class ControllableParticle extends TextureSheetParticle {
 
     public void moveToWithPhysics(Vec3 pos) {
         Vec3 rel = pos.subtract(getLoc());
-        BlockHitResult res = PhysicsUtil.INSTANCE.collide(getLoc(), rel, (Level) getClientWorld());
+        BlockHitResult res = PhysicsUtil.collide(getLoc(), rel, (Level) getClientWorld());
         Vec3 actualPos = res.getType() != HitResult.Type.MISS
-                ? PhysicsUtil.INSTANCE.fixBeforeCollidePosition(res) : pos;
+                ? PhysicsUtil.fixBeforeCollidePosition(res) : pos;
         teleportTo(actualPos);
     }
 
     public void moveToWithPhysics(Vec3 pos, BlockHitResult collideResult) {
         Vec3 actualPos = collideResult.getType() != HitResult.Type.MISS
-                ? PhysicsUtil.INSTANCE.fixBeforeCollidePosition(collideResult) : pos;
+                ? PhysicsUtil.fixBeforeCollidePosition(collideResult) : pos;
         teleportTo(actualPos);
     }
 

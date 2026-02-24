@@ -11,10 +11,10 @@ public final class PhysicsUtil {
     }
 
     public static RelativeLocation steer(RelativeLocation velocity, RelativeLocation desired, double blend) {
-        double clampedBlend = Math3DUtil.INSTANCE.clamp(blend, 0.0, 1.0);
-        velocity.setX(Math3DUtil.INSTANCE.lerp(velocity.getX(), desired.getX(), clampedBlend));
-        velocity.setY(Math3DUtil.INSTANCE.lerp(velocity.getY(), desired.getY(), clampedBlend));
-        velocity.setZ(Math3DUtil.INSTANCE.lerp(velocity.getZ(), desired.getZ(), clampedBlend));
+        double clampedBlend = Math3DUtil.clamp(blend, 0.0, 1.0);
+        velocity.setX(Math3DUtil.lerp(velocity.getX(), desired.getX(), clampedBlend));
+        velocity.setY(Math3DUtil.lerp(velocity.getY(), desired.getY(), clampedBlend));
+        velocity.setZ(Math3DUtil.lerp(velocity.getZ(), desired.getZ(), clampedBlend));
         return velocity;
     }
 

@@ -72,6 +72,6 @@ public final class LineEmitterInterpolator implements Interpolator {
         if (queue.get(0).distance(queue.get(1)) > limit) {
             return new ArrayList<>(Collections.singletonList(queue.get(1)));
         }
-        return Math3DUtil.INSTANCE.fillLine(queue.get(0), queue.get(1), getRefinerCount());
+        return Math3DUtil.fillLine(queue.get(0), queue.get(1), getRefinerCount());
     }
 }

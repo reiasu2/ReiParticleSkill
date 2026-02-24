@@ -160,6 +160,28 @@ public final class ParticleEmittersManager {
         return lastTickStats.clone();
     }
 
+    /**
+     * Returns a human-readable debug summary of the emitter system state.
+     * Includes active emitter count, viewer counts, and last tick statistics.
+     */
+    public static String getDebugInfo() {
+        int serverCount;
+        synchronized (EMITTERS) {
+            serverCount = EMITTERS.size();
+        }
+        int clientCount = CLIENT_EMITTERS.size();
+        int totalViewers = 0;
+        for (Set<UUID> vis : VISIBLE.values()) {
+            totalViewers += vis.size();
+        }
+        int[] stats = getLastTickStats();
+        return String.format(
+                "Emitters: server=%d, client=%d | Viewers: %d players tracking | "
+                        + "Last tick: synced=%d, skippedLod=%d, skippedShard=%d, throttled=%d",
+                serverCount, clientCount, VISIBLE.size(),
+                stats[0], stats[1], stats[2], stats[3]);
+    }
+
     public static void tickAll() {
         lastTickStats = new int[]{statSynced, statSkippedLod, statSkippedShard, statThrottled};
         statSynced = 0;

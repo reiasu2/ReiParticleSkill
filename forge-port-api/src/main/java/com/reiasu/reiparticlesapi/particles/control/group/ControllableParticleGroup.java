@@ -209,7 +209,7 @@ public abstract class ControllableParticleGroup implements Controllable<Controll
     public void rotateToPoint(RelativeLocation to) {
         if (!displayed) return;
         List<RelativeLocation> locs = new ArrayList<>(particlesLocations.values());
-        Math3DUtil.INSTANCE.rotatePointsToPoint(locs, to, axis);
+        Math3DUtil.rotatePointsToPoint(locs, to, axis);
         teleportAllToRelative();
         axis = to.normalize();
     }
@@ -218,9 +218,9 @@ public abstract class ControllableParticleGroup implements Controllable<Controll
     public void rotateToWithAngle(RelativeLocation to, double angle) {
         if (!displayed) return;
         List<RelativeLocation> locs = new ArrayList<>(particlesLocations.values());
-        Math3DUtil.INSTANCE.rotatePointsToPoint(locs, to, axis);
+        Math3DUtil.rotatePointsToPoint(locs, to, axis);
         List<RelativeLocation> locs2 = new ArrayList<>(particlesLocations.values());
-        Math3DUtil.INSTANCE.rotateAsAxis(locs2, to.normalize(), angle);
+        Math3DUtil.rotateAsAxis(locs2, to.normalize(), angle);
         teleportAllToRelative();
         axis = to.normalize();
     }
@@ -229,7 +229,7 @@ public abstract class ControllableParticleGroup implements Controllable<Controll
     public void rotateAsAxis(double angle) {
         if (!displayed) return;
         List<RelativeLocation> locs = new ArrayList<>(particlesLocations.values());
-        Math3DUtil.INSTANCE.rotateAsAxis(locs, axis, angle);
+        Math3DUtil.rotateAsAxis(locs, axis, angle);
         teleportAllToRelative();
     }
 
@@ -276,17 +276,17 @@ public abstract class ControllableParticleGroup implements Controllable<Controll
     // ---- Pre-rotate helpers ----
 
     public void preRotateTo(Map<ParticleRelativeData, RelativeLocation> map, RelativeLocation to) {
-        Math3DUtil.INSTANCE.rotatePointsToPoint(new ArrayList<>(map.values()), to, axis);
+        Math3DUtil.rotatePointsToPoint(new ArrayList<>(map.values()), to, axis);
         axis = to;
     }
 
     public void preRotateAsAxis(Map<ParticleRelativeData, RelativeLocation> map, RelativeLocation axisParam, double angle) {
-        Math3DUtil.INSTANCE.rotateAsAxis(new ArrayList<>(map.values()), axisParam, angle);
+        Math3DUtil.rotateAsAxis(new ArrayList<>(map.values()), axisParam, angle);
         axis = axisParam;
     }
 
     public void preRotateAsAxis(Map<ParticleRelativeData, RelativeLocation> map, double angle) {
-        Math3DUtil.INSTANCE.rotateAsAxis(new ArrayList<>(map.values()), axis, angle);
+        Math3DUtil.rotateAsAxis(new ArrayList<>(map.values()), axis, angle);
     }
 
     // ---- Internal ----

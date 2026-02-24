@@ -23,6 +23,23 @@ Output: `build/libs/reiparticlesapi-1.0-SNAPSHOT-forge-port.jar`
 
 Place alongside `forge-port` (ReiParticleSkill) in the `mods/` folder.
 
+## API Stability
+
+### Stable (recommended for third-party mods)
+- **`ParticleEmittersManager`** — emitter lifecycle (spawn/cancel/tick)
+- **`ParticleEmitters` / `AutoParticleEmitters`** — emitter base classes
+- **`ReiEventBus`** — event registration and dispatch
+- **`ReiScheduler`** — deferred task scheduling
+- **`ServerCameraUtil`** — camera shake packets
+- **`CodecHelper`** — buffer codec type registry
+
+### Experimental / Internal
+- **`ParticleGroupStyle` / `SequencedParticleStyle`** — API may change
+- **`registerParticleStyles()` / `registerKeyBindings()`** — no-op stubs, not yet implemented
+- **`ParticleComposition`** — composition system under development
+- **`RenderEntity`** — render entity system under development
+- **`BarrageManager`** — barrage/hitbox system, internal use
+
 ## API Quick Start
 
 ### 1. Creating a Custom Emitter

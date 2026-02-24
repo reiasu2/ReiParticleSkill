@@ -153,7 +153,7 @@ public final class DragonRespawnStateUtil {
         if (world == null || pillarPos == null) return;
 
         Vec3 center = Vec3.atCenterOf(pillarPos);
-        ServerCameraUtil.INSTANCE.sendShake(world, center, 128.0, 3.0, 20);
+        ServerCameraUtil.sendShake(world, center, 128.0, 3.0, 20);
 
         // Spawn pillar collection emitter
         CollectPillarsEmitters emitter = new CollectPillarsEmitters(center, world);
@@ -178,7 +178,7 @@ public final class DragonRespawnStateUtil {
         Vec3 center = Vec3.atCenterOf(pos);
 
         // Camera shake
-        ServerCameraUtil.INSTANCE.sendShake(world, center, 128.0, 3.0, 20);
+        ServerCameraUtil.sendShake(world, center, 128.0, 3.0, 20);
 
         // End beam explosion
         EndBeamExplosionEmitter explosion = new EndBeamExplosionEmitter(center, world);
@@ -224,7 +224,7 @@ public final class DragonRespawnStateUtil {
             public void tick() {
                 if (world != null && pos != null) {
                     Vec3 center = Vec3.atCenterOf(pos);
-                    ServerCameraUtil.INSTANCE.sendShake(world, center, 128.0, 2.0, 30);
+                    ServerCameraUtil.sendShake(world, center, 128.0, 2.0, 30);
                 }
             }
 

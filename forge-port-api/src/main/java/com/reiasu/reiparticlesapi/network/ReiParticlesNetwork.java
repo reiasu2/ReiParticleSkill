@@ -118,7 +118,8 @@ public final class ReiParticlesNetwork {
         try {
             VersionBridgeRegistry.network().sendToPlayer(CHANNEL, player, packet);
         } catch (IllegalArgumentException e) {
-            // Expected when remote client lacks this channel (server-only install).
+            LOGGER.debug("Player {} lacks channel — packet {} dropped",
+                    player.getName().getString(), packet.getClass().getSimpleName());
         } catch (RuntimeException e) {
             LOGGER.debug("Failed to send packet {} to {}: {}", packet.getClass().getSimpleName(),
                     player.getName().getString(), e.getMessage());

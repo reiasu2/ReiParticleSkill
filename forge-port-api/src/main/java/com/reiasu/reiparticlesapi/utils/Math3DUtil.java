@@ -8,24 +8,22 @@ import java.util.List;
 import org.joml.Vector3f;
 
 public final class Math3DUtil {
-    public static final Math3DUtil INSTANCE = new Math3DUtil();
-
     private Math3DUtil() {
     }
 
-    public double length(double x, double y, double z) {
+    public static double length(double x, double y, double z) {
         return Math.sqrt(x * x + y * y + z * z);
     }
 
-    public double clamp(double value, double min, double max) {
+    public static double clamp(double value, double min, double max) {
         return Math.max(min, Math.min(max, value));
     }
 
-    public double lerp(double from, double to, double alpha) {
+    public static double lerp(double from, double to, double alpha) {
         return from + (to - from) * alpha;
     }
 
-    public Vector3f colorOf(int r, int g, int b) {
+    public static Vector3f colorOf(int r, int g, int b) {
         int rr = (int) clamp(r, 0, 255);
         int gg = (int) clamp(g, 0, 255);
         int bb = (int) clamp(b, 0, 255);
@@ -38,7 +36,7 @@ public final class Math3DUtil {
      * @param target the target direction vector
      * @return float array [pitch, yaw, roll] in radians
      */
-    public float[] calculateEulerAnglesToPointArray(Vector3f target) {
+    public static float[] calculateEulerAnglesToPointArray(Vector3f target) {
         if (target.x == 0.0f && target.y == 0.0f && target.z == 0.0f) {
             return new float[]{0.0f, 0.0f, 0.0f};
         }
@@ -48,11 +46,11 @@ public final class Math3DUtil {
         return new float[]{pitch, yaw, roll};
     }
 
-    public double getYawFromLocation(RelativeLocation location) {
+    public static double getYawFromLocation(RelativeLocation location) {
         return Math.atan2(-location.getX(), location.getZ());
     }
 
-    public double getPitchFromLocation(RelativeLocation location) {
+    public static double getPitchFromLocation(RelativeLocation location) {
         double x = location.getX();
         double y = location.getY();
         double z = location.getZ();
@@ -62,7 +60,7 @@ public final class Math3DUtil {
     /**
      * Generate points along a line from start to end with the given step distance.
      */
-    public List<RelativeLocation> fillLine(RelativeLocation start, RelativeLocation end, double step) {
+    public static List<RelativeLocation> fillLine(RelativeLocation start, RelativeLocation end, double step) {
         List<RelativeLocation> result = new ArrayList<>();
         double dist = start.distance(end);
         if (dist <= 0.0 || step <= 0.0) {
@@ -92,7 +90,7 @@ public final class Math3DUtil {
      * @param branches  number of side branches
      * @return list of points along the bolt path
      */
-    public List<RelativeLocation> getLightningEffectPoints(RelativeLocation target, int segments, int branches) {
+    public static List<RelativeLocation> getLightningEffectPoints(RelativeLocation target, int segments, int branches) {
         List<RelativeLocation> result = new ArrayList<>();
         if (target == null || segments <= 0) return result;
 
@@ -126,7 +124,7 @@ public final class Math3DUtil {
         return result;
     }
 
-    public List<RelativeLocation> getPolygonInCircleVertices(int sides, double radius) {
+    public static List<RelativeLocation> getPolygonInCircleVertices(int sides, double radius) {
         List<RelativeLocation> vertices = new ArrayList<>();
         if (sides < 3) {
             return vertices;
@@ -142,7 +140,7 @@ public final class Math3DUtil {
      * Rotates all points in-place around the given axis by the specified angle
      * using Rodrigues' rotation formula.
      */
-    public void rotateAsAxis(List<RelativeLocation> points, RelativeLocation axis, double radians) {
+    public static void rotateAsAxis(List<RelativeLocation> points, RelativeLocation axis, double radians) {
         if (points == null || points.isEmpty() || axis == null) return;
         double len = axis.length();
         if (len < 1.0E-10) return;
@@ -169,7 +167,7 @@ public final class Math3DUtil {
      * Rotates all points in-place so that the current {@code fromAxis} direction
      * is aligned to the {@code toAxis} direction.
      */
-    public void rotatePointsToPoint(List<RelativeLocation> points, RelativeLocation toAxis, RelativeLocation fromAxis) {
+    public static void rotatePointsToPoint(List<RelativeLocation> points, RelativeLocation toAxis, RelativeLocation fromAxis) {
         if (points == null || points.isEmpty() || toAxis == null || fromAxis == null) return;
         double fromLen = fromAxis.length();
         double toLen = toAxis.length();
@@ -209,7 +207,7 @@ public final class Math3DUtil {
     /**
      * Returns a unit vector perpendicular to (x, y, z).
      */
-    private RelativeLocation perpendicular(double x, double y, double z) {
+    private static RelativeLocation perpendicular(double x, double y, double z) {
         if (Math.abs(x) < 0.9) {
             // cross with (1, 0, 0)
             double cy = z;

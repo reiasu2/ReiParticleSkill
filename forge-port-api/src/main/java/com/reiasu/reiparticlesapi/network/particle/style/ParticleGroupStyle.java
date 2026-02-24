@@ -12,6 +12,7 @@ import com.reiasu.reiparticlesapi.particles.control.ParticleController;
 import com.reiasu.reiparticlesapi.utils.Math3DUtil;
 import com.reiasu.reiparticlesapi.utils.RelativeLocation;
 import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
@@ -67,6 +68,11 @@ public abstract class ParticleGroupStyle implements ServerController<ParticleGro
     public ParticleGroupStyle(double visibleRange, UUID uuid) {
         this.visibleRange = visibleRange;
         this.uuid = uuid;
+    }
+
+    @Override
+    public void spawnInWorld(ServerLevel world, Vec3 pos) {
+        ParticleStyleManager.spawnStyle(world, pos, this);
     }
 
     // ---- Getters/Setters ----
@@ -247,7 +253,7 @@ public abstract class ParticleGroupStyle implements ServerController<ParticleGro
         toggleScale(locations);
         // Rotate initial positions
         List<RelativeLocation> locs = new ArrayList<>(locations.values());
-        Math3DUtil.INSTANCE.rotateAsAxis(locs, axis, rotate);
+        Math3DUtil.rotateAsAxis(locs, axis, rotate);
 
         for (Map.Entry<StyleData, RelativeLocation> entry : locations.entrySet()) {
             StyleData data = entry.getKey();
@@ -353,7 +359,7 @@ public abstract class ParticleGroupStyle implements ServerController<ParticleGro
 
     public void rotateAsAxis(double radian) {
         List<RelativeLocation> locs = new ArrayList<>(particleLocations.values());
-        Math3DUtil.INSTANCE.rotateAsAxis(locs, axis, radian);
+        Math3DUtil.rotateAsAxis(locs, axis, radian);
         this.rotate += radian;
         if (this.rotate >= Math.PI * 2) {
             this.rotate -= Math.PI * 2;
@@ -363,16 +369,16 @@ public abstract class ParticleGroupStyle implements ServerController<ParticleGro
 
     public void rotateToPoint(RelativeLocation to) {
         List<RelativeLocation> locs = new ArrayList<>(particleLocations.values());
-        Math3DUtil.INSTANCE.rotatePointsToPoint(locs, to, axis);
+        Math3DUtil.rotatePointsToPoint(locs, to, axis);
         this.axis = to;
         toggleRelative();
     }
 
     public void rotateToWithAngle(RelativeLocation to, double radian) {
         List<RelativeLocation> locs = new ArrayList<>(particleLocations.values());
-        Math3DUtil.INSTANCE.rotatePointsToPoint(locs, to, axis);
+        Math3DUtil.rotatePointsToPoint(locs, to, axis);
         List<RelativeLocation> locs2 = new ArrayList<>(particleLocations.values());
-        Math3DUtil.INSTANCE.rotateAsAxis(locs2, to.normalize(), radian);
+        Math3DUtil.rotateAsAxis(locs2, to.normalize(), radian);
         this.axis = to;
         this.rotate += radian;
         if (this.rotate >= Math.PI * 2) {

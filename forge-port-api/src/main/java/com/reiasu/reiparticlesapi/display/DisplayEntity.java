@@ -54,6 +54,11 @@ public abstract class DisplayEntity implements ServerController<DisplayEntity> {
     private float roll;
     private float scale = 1.0f;
 
+    @Override
+    public void spawnInWorld(ServerLevel world, Vec3 pos) {
+        DisplayEntityManager.INSTANCE.spawn(this);
+    }
+
     // ─── Accessors ───────────────────────────────────────────────────────
 
     public UUID getControlUUID() {

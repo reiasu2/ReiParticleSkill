@@ -2,7 +2,7 @@
 // Copyright (C) 2025 Reiasu
 package com.reiasu.reiparticlesapi.reflect;
 
-import com.reiasu.reiparticlesapi.ReiParticlesConstants;
+import com.mojang.logging.LogUtils;
 import io.github.classgraph.ClassGraph;
 import io.github.classgraph.ClassInfo;
 import io.github.classgraph.ClassInfoList;
@@ -24,6 +24,7 @@ import java.util.stream.Collectors;
 public final class ReiAPIScanner {
 
     public static final ReiAPIScanner INSTANCE = new ReiAPIScanner();
+    private static final org.slf4j.Logger LOGGER = LogUtils.getLogger();
 
     private final HashSet<String> scanPackages = new HashSet<>();
     private boolean loaded = false;
@@ -41,30 +42,35 @@ public final class ReiAPIScanner {
         }
         loaded = true;
 
-        long start = System.currentTimeMillis();
-        ReiParticlesConstants.logger.info("Starting ClassGraph scan...");
+        try {
+            long start = System.currentTimeMillis();
+            LOGGER.info("Starting ClassGraph scan...");
 
-        String[] packages = scanPackages.toArray(new String[0]);
-        try (ScanResult scanResult = new ClassGraph()
-                .enableClassInfo()
-                .enableAnnotationInfo()
-                .acceptPackages(packages)
-                .scan()) {
+            String[] packages = scanPackages.toArray(new String[0]);
+            try (ScanResult scanResult = new ClassGraph()
+                    .enableClassInfo()
+                    .enableAnnotationInfo()
+                    .acceptPackages(packages)
+                    .scan()) {
 
-            ClassInfoList allClasses = scanResult.getAllClasses()
-                    .filter(ci -> !ci.getAnnotations().isEmpty());
+                ClassInfoList allClasses = scanResult.getAllClasses()
+                        .filter(ci -> !ci.getAnnotations().isEmpty());
 
-            for (ClassInfo ci : allClasses) {
-                String className = ci.getName();
-                HashSet<String> annotationNames = ci.getAnnotations().stream()
-                        .map(ClassInfo::getName)
-                        .collect(Collectors.toCollection(HashSet::new));
-                classes.add(new SimpleClassInfo(className, annotationNames));
+                for (ClassInfo ci : allClasses) {
+                    String className = ci.getName();
+                    HashSet<String> annotationNames = ci.getAnnotations().stream()
+                            .map(ClassInfo::getName)
+                            .collect(Collectors.toCollection(HashSet::new));
+                    classes.add(new SimpleClassInfo(className, annotationNames));
+                }
             }
-        }
 
-        long end = System.currentTimeMillis();
-        ReiParticlesConstants.logger.info("ClassGraph scan completed in {}ms", (end - start));
+            long end = System.currentTimeMillis();
+            LOGGER.info("ClassGraph scan completed in {}ms", (end - start));
+        } catch (NoClassDefFoundError e) {
+            LOGGER.warn("ClassGraph not available — falling back to explicit listener registration only. "
+                    + "Use registerListenerInstance() or registerAnnotatedClass() instead.", e);
+        }
     }
 
     /**
@@ -90,7 +96,7 @@ public final class ReiAPIScanner {
                 try {
                     out.add(info.toClass());
                 } catch (ClassNotFoundException e) {
-                    ReiParticlesConstants.logger.warn("Failed to load class: " + info.getType(), e);
+                    LOGGER.warn("Failed to load class: " + info.getType(), e);
                 }
             }
         }
@@ -129,7 +135,7 @@ public final class ReiAPIScanner {
      */
     public static void registerPackage(String packageName) {
         INSTANCE.scanPackages.add(packageName);
-        ReiParticlesConstants.logger.info("Registered scan package: {}", packageName);
+        LOGGER.info("Registered scan package: {}", packageName);
     }
 
     /** @deprecated Use {@link #registerPackage(Class)} instead. */

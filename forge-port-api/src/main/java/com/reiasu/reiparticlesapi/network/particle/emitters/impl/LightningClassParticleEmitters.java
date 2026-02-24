@@ -53,7 +53,7 @@ public final class LightningClassParticleEmitters extends ClassParticleEmitters 
                 random.nextDouble() * 100.0 - 50.0,
                 random.nextDouble() * 20.0 - 10.0,
                 random.nextDouble() * 100.0 - 50.0);
-        List<RelativeLocation> points = Math3DUtil.INSTANCE.getLightningEffectPoints(target, 10, 3);
+        List<RelativeLocation> points = Math3DUtil.getLightningEffectPoints(target, 10, 3);
         List<Map.Entry<SerializableData, RelativeLocation>> result = new ArrayList<>();
         for (RelativeLocation pt : points) {
             result.add(new AbstractMap.SimpleEntry<>(templateData.clone(), pt));
