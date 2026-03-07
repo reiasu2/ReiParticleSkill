@@ -124,6 +124,34 @@ class DisplayEntityManagerTest {
         assertEquals(source.getScale(), decoded.getScale());
     }
 
+    @Test
+    void shouldContinueTickingOtherDisplaysAfterDisplayFailure() {
+        FailingDisplay failing = new FailingDisplay();
+        CountingDisplay healthy = new CountingDisplay();
+        DisplayEntityManager.INSTANCE.spawn(failing);
+        DisplayEntityManager.INSTANCE.spawn(healthy);
+
+        DisplayEntityManager.INSTANCE.tickAll();
+
+        assertEquals(1, healthy.ticks);
+        assertEquals(1, DisplayEntityManager.INSTANCE.activeCount());
+        assertSame(healthy, DisplayEntityManager.INSTANCE.getDisplays().get(0));
+    }
+
+    @Test
+    void shouldContinueClientTickAfterDisplayFailure() {
+        FailingDisplay failing = new FailingDisplay();
+        CountingDisplay healthy = new CountingDisplay();
+        DisplayEntityManager.INSTANCE.addClient(failing);
+        DisplayEntityManager.INSTANCE.addClient(healthy);
+
+        DisplayEntityManager.INSTANCE.tickClient();
+
+        assertEquals(1, healthy.ticks);
+        assertEquals(1, DisplayEntityManager.INSTANCE.getClientView().size());
+        assertSame(healthy, DisplayEntityManager.INSTANCE.getClientView().get(healthy.getControlUUID()));
+    }
+
     private static final class TestDisplayEntity extends DisplayEntity {
         private Level boundLevel() {
             return level();
@@ -141,7 +169,23 @@ class DisplayEntityManagerTest {
         @Override
         public void setPos(Vec3 pos) {
             this.shadowedPos = pos == null ? Vec3.ZERO : pos;
+            markDirty();
+        }
+    }
+
+    private static final class FailingDisplay extends DisplayEntity {
+        @Override
+        public void tick() {
+            throw new IllegalStateException("boom");
+        }
+    }
+
+    private static final class CountingDisplay extends DisplayEntity {
+        private int ticks;
+
+        @Override
+        public void tick() {
+            ticks++;
         }
     }
 }
-

@@ -2,18 +2,23 @@
 // Copyright (C) 2025 Reiasu
 package com.reiasu.reiparticlesapi.network.particle.emitters;
 
+import com.mojang.logging.LogUtils;
 import com.reiasu.reiparticlesapi.event.ReiEventBus;
 import com.reiasu.reiparticlesapi.event.events.particle.emitter.EmitterRemoveEvent;
 import com.reiasu.reiparticlesapi.event.events.particle.emitter.EmitterSpawnEvent;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
+import org.slf4j.Logger;
 
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 final class ParticleEmitterClientStore {
+    private static final Logger LOGGER = LogUtils.getLogger();
+
     private final Map<UUID, ParticleEmitters> clientEmitters = new ConcurrentHashMap<>();
 
     void createOrChange(ParticleEmitters emitters, Level viewWorld) {
@@ -37,15 +42,23 @@ final class ParticleEmitterClientStore {
     }
 
     void tickClient() {
-        clientEmitters.entrySet().removeIf(entry -> {
+        Iterator<Map.Entry<UUID, ParticleEmitters>> iterator = clientEmitters.entrySet().iterator();
+        while (iterator.hasNext()) {
+            Map.Entry<UUID, ParticleEmitters> entry = iterator.next();
             ParticleEmitters emitters = entry.getValue();
-            emitters.tick();
+            try {
+                emitters.tick();
+            } catch (Exception e) {
+                LOGGER.warn("Emitter {} ({}) failed during client tick; removing emitter",
+                        emitters.getUuid(), emitters.getClass().getName(), e);
+                emitters.cancel();
+            }
             if (!emitters.getCanceled()) {
-                return false;
+                continue;
             }
             ReiEventBus.call(new EmitterRemoveEvent(emitters, true));
-            return true;
-        });
+            iterator.remove();
+        }
     }
 
     int size() {

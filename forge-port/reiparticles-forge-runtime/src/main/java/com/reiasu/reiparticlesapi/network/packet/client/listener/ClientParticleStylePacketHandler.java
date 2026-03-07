@@ -12,7 +12,6 @@ import com.reiasu.reiparticlesapi.particles.control.ControlType;
 import com.reiasu.reiparticlesapi.utils.RelativeLocation;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.phys.Vec3;
-
 import org.slf4j.Logger;
 
 import java.util.Map;
@@ -28,7 +27,7 @@ public final class ClientParticleStylePacketHandler {
         UUID uuid = packet.uuid();
         ControlType type = packet.type();
         if (type == ControlType.CREATE) {
-            handleCreate(uuid, packet.args());
+            handleCreate(uuid, packet.args(), LOGGER);
             return;
         }
         if (type == ControlType.CHANGE) {
@@ -54,7 +53,7 @@ public final class ClientParticleStylePacketHandler {
         style.readPacketArgs(args);
     }
 
-    private static void handleCreate(UUID uuid, Map<String, ParticleControllerDataBuffer<?>> args) {
+    static void handleCreate(UUID uuid, Map<String, ParticleControllerDataBuffer<?>> args, Logger logger) {
         Integer styleTypeId = readInt(args, "style_type_id");
         if (styleTypeId == null || styleTypeId < 0) {
             return;
@@ -81,8 +80,8 @@ public final class ClientParticleStylePacketHandler {
                 return;
             }
             ParticleStyleManager.spawnStyle(minecraft.level, style.getPos(), style);
-        } catch (Throwable t) {
-            LOGGER.debug("Failed to spawn particle style {}: {}", uuid, t.getMessage());
+        } catch (Exception e) {
+            logger.warn("Failed to spawn particle style {} (type {})", uuid, styleTypeId, e);
         }
     }
 
@@ -135,11 +134,6 @@ public final class ClientParticleStylePacketHandler {
         if (autoToggle != null) {
             style.setAutoToggle(autoToggle);
         }
-    }
-
-    private static String readString(Map<String, ? extends ParticleControllerDataBuffer<?>> args, String key) {
-        Object value = read(args, key);
-        return value instanceof String s ? s : null;
     }
 
     private static Vec3 readVec3(Map<String, ? extends ParticleControllerDataBuffer<?>> args, String key) {

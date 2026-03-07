@@ -45,6 +45,7 @@ public abstract class DisplayEntity implements ServerController<DisplayEntity> {
 
     private UUID controlUUID = UUID.randomUUID();
     private boolean valid = true;
+    private boolean dirty = true;
     private Level level;
     private Vec3 pos = Vec3.ZERO;
     private float yaw;
@@ -54,9 +55,8 @@ public abstract class DisplayEntity implements ServerController<DisplayEntity> {
 
     @Override
     public void spawnInWorld(ServerLevel world, Vec3 pos) {
-        Vec3 safePos = pos == null ? Vec3.ZERO : pos;
-        this.pos = safePos;
-        setPos(safePos);
+        bindLevel(world);
+        setPos(pos == null ? Vec3.ZERO : pos);
         DisplayEntityManager.INSTANCE.spawn(this, world);
     }
 
@@ -66,6 +66,7 @@ public abstract class DisplayEntity implements ServerController<DisplayEntity> {
 
     public void setControlUUID(UUID controlUUID) {
         this.controlUUID = controlUUID;
+        markDirty();
     }
 
     public boolean getValid() {
@@ -74,6 +75,7 @@ public abstract class DisplayEntity implements ServerController<DisplayEntity> {
 
     public void setValid(boolean valid) {
         this.valid = valid;
+        markDirty();
     }
 
     public Vec3 getPos() {
@@ -82,6 +84,7 @@ public abstract class DisplayEntity implements ServerController<DisplayEntity> {
 
     public void setPos(Vec3 pos) {
         this.pos = pos == null ? Vec3.ZERO : pos;
+        markDirty();
     }
 
     public float getYaw() {
@@ -90,6 +93,7 @@ public abstract class DisplayEntity implements ServerController<DisplayEntity> {
 
     public void setYaw(float yaw) {
         this.yaw = yaw;
+        markDirty();
     }
 
     public float getPitch() {
@@ -98,6 +102,7 @@ public abstract class DisplayEntity implements ServerController<DisplayEntity> {
 
     public void setPitch(float pitch) {
         this.pitch = pitch;
+        markDirty();
     }
 
     public float getRoll() {
@@ -106,6 +111,7 @@ public abstract class DisplayEntity implements ServerController<DisplayEntity> {
 
     public void setRoll(float roll) {
         this.roll = roll;
+        markDirty();
     }
 
     public float getScale() {
@@ -114,6 +120,7 @@ public abstract class DisplayEntity implements ServerController<DisplayEntity> {
 
     public void setScale(float scale) {
         this.scale = scale;
+        markDirty();
     }
 
     public String typeId() {
@@ -133,6 +140,20 @@ public abstract class DisplayEntity implements ServerController<DisplayEntity> {
         return level;
     }
 
+    protected final void markDirty() {
+        dirty = true;
+    }
+
+    public final boolean consumeDirty() {
+        boolean current = dirty;
+        dirty = false;
+        return current;
+    }
+
+    public final void clearDirty() {
+        dirty = false;
+    }
+
     public void update(DisplayEntity other) {
         setValid(other.getValid());
         setPos(other.getPos());
@@ -150,6 +171,6 @@ public abstract class DisplayEntity implements ServerController<DisplayEntity> {
     @Override
     public void cancel() {
         this.valid = false;
+        markDirty();
     }
 }
-

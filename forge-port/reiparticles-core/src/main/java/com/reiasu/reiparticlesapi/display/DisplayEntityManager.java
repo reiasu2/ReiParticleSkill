@@ -2,11 +2,13 @@
 // Copyright (C) 2025 Reiasu
 package com.reiasu.reiparticlesapi.display;
 
+import com.mojang.logging.LogUtils;
 import com.reiasu.reiparticlesapi.network.ReiParticlesNetwork;
 import com.reiasu.reiparticlesapi.network.packet.PacketDisplayEntityS2C;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import org.slf4j.Logger;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -19,6 +21,8 @@ import java.util.function.Function;
 
 public final class DisplayEntityManager {
     public static final DisplayEntityManager INSTANCE = new DisplayEntityManager();
+    private static final Logger LOGGER = LogUtils.getLogger();
+
     private final List<DisplayEntity> displays = new ArrayList<>();
     private final Map<UUID, DisplayEntity> serverView = new ConcurrentHashMap<>();
     private final Map<UUID, DisplayEntity> clientView = new ConcurrentHashMap<>();
@@ -69,6 +73,7 @@ public final class DisplayEntityManager {
             }
             serverView.put(entity.getControlUUID(), entity);
             sync(entity, PacketDisplayEntityS2C.Method.CREATE);
+            entity.clearDirty();
         }
     }
 
@@ -81,24 +86,42 @@ public final class DisplayEntityManager {
             Iterator<DisplayEntity> iterator = displays.iterator();
             while (iterator.hasNext()) {
                 DisplayEntity display = iterator.next();
-                display.tick();
+                try {
+                    display.tick();
+                } catch (Exception e) {
+                    LOGGER.warn("Display entity {} ({}) failed during server tick; removing display",
+                            display.getControlUUID(), display.getClass().getName(), e);
+                    display.cancel();
+                }
                 if (display.getCanceled()) {
                     iterator.remove();
                     serverView.remove(display.getControlUUID());
                     sync(display, PacketDisplayEntityS2C.Method.REMOVE);
                     continue;
                 }
-                sync(display, PacketDisplayEntityS2C.Method.TOGGLE);
+                if (display.consumeDirty()) {
+                    sync(display, PacketDisplayEntityS2C.Method.TOGGLE);
+                }
             }
         }
     }
 
     public void tickClient() {
-        clientView.entrySet().removeIf(entry -> {
+        Iterator<Map.Entry<UUID, DisplayEntity>> iterator = clientView.entrySet().iterator();
+        while (iterator.hasNext()) {
+            Map.Entry<UUID, DisplayEntity> entry = iterator.next();
             DisplayEntity display = entry.getValue();
-            display.tick();
-            return display.getCanceled();
-        });
+            try {
+                display.tick();
+            } catch (Exception e) {
+                LOGGER.warn("Display entity {} ({}) failed during client tick; removing display",
+                        display.getControlUUID(), display.getClass().getName(), e);
+                display.cancel();
+            }
+            if (display.getCanceled()) {
+                iterator.remove();
+            }
+        }
     }
 
     public int activeCount() {
@@ -153,4 +176,3 @@ public final class DisplayEntityManager {
         }
     }
 }
-

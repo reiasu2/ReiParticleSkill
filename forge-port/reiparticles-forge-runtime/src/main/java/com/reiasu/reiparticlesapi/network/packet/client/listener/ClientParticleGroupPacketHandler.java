@@ -14,7 +14,6 @@ import com.reiasu.reiparticlesapi.utils.RelativeLocation;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.world.phys.Vec3;
-
 import org.slf4j.Logger;
 
 import java.lang.reflect.Method;
@@ -32,75 +31,101 @@ public final class ClientParticleGroupPacketHandler {
         UUID uuid = packet.uuid();
         ControlType type = packet.type();
         switch (type) {
-            case CREATE -> handleCreate(uuid, packet.args());
-            case CHANGE -> handleChange(uuid, packet.args());
+            case CREATE -> handleCreate(uuid, packet.args(), LOGGER);
+            case CHANGE -> handleChange(uuid, packet.args(), LOGGER);
             case REMOVE -> handleRemove(uuid);
         }
     }
 
     @SuppressWarnings("unchecked")
-    private static void handleCreate(UUID groupUUID, Map<String, ParticleControllerDataBuffer<?>> args) {
+    static void handleCreate(UUID groupUUID, Map<String, ParticleControllerDataBuffer<?>> args, Logger logger) {
         Object posObj = readValue(args, PacketParticleGroupS2C.PacketArgsType.POS.getOfArgs());
-        if (!(posObj instanceof Vec3 pos)) return;
+        if (!(posObj instanceof Vec3 pos)) {
+            return;
+        }
 
         ClientLevel world = Minecraft.getInstance().level;
-        if (world == null) return;
+        if (world == null) {
+            return;
+        }
 
         Object typeObj = readValue(args, PacketParticleGroupS2C.PacketArgsType.GROUP_TYPE.getOfArgs());
-        if (!(typeObj instanceof String typeName)) return;
+        if (!(typeObj instanceof String typeName)) {
+            return;
+        }
 
         try {
             Class<?> rawClass = Class.forName(typeName);
-            if (!ControllableParticleGroup.class.isAssignableFrom(rawClass)) return;
+            if (!ControllableParticleGroup.class.isAssignableFrom(rawClass)) {
+                return;
+            }
             Class<? extends ControllableParticleGroup> groupClass = (Class<? extends ControllableParticleGroup>) rawClass;
 
             ControllableParticleGroupProvider provider = ClientParticleGroupManager.INSTANCE.getBuilder(groupClass);
-            if (provider == null) return;
+            if (provider == null) {
+                return;
+            }
 
             ControllableParticleGroup group = provider.createGroup(groupUUID, args);
-            if (group == null) return;
+            if (group == null) {
+                return;
+            }
 
             group.display(pos, world);
             ClientParticleGroupManager.INSTANCE.addVisibleGroup(group);
-        } catch (Throwable t) {
-            LOGGER.debug("Failed to display particle group {}: {}", typeName, t.getMessage());
+        } catch (Exception e) {
+            logger.warn("Failed to display particle group {} ({})", groupUUID, typeName, e);
         }
     }
 
-    private static void handleChange(UUID groupUUID, Map<String, ParticleControllerDataBuffer<?>> args) {
+    static void handleChange(UUID groupUUID, Map<String, ParticleControllerDataBuffer<?>> args, Logger logger) {
         ControllableParticleGroup targetGroup = ClientParticleGroupManager.INSTANCE.getControlGroup(groupUUID);
-        if (targetGroup == null) return;
+        if (targetGroup == null) {
+            return;
+        }
 
         Set<String> argKeys = args.keySet();
 
         if (argKeys.contains(PacketParticleGroupS2C.PacketArgsType.POS.getOfArgs())) {
             Object val = readValue(args, PacketParticleGroupS2C.PacketArgsType.POS.getOfArgs());
-            if (val instanceof Vec3 pos) targetGroup.teleportTo(pos);
+            if (val instanceof Vec3 pos) {
+                targetGroup.teleportTo(pos);
+            }
         }
 
         if (argKeys.contains(PacketParticleGroupS2C.PacketArgsType.ROTATE_TO.getOfArgs())) {
             Object val = readValue(args, PacketParticleGroupS2C.PacketArgsType.ROTATE_TO.getOfArgs());
-            if (val instanceof Vec3 v) targetGroup.rotateToPoint(RelativeLocation.of(v));
+            if (val instanceof Vec3 v) {
+                targetGroup.rotateToPoint(RelativeLocation.of(v));
+            }
         }
 
         if (argKeys.contains(PacketParticleGroupS2C.PacketArgsType.ROTATE_AXIS.getOfArgs())) {
             Object val = readValue(args, PacketParticleGroupS2C.PacketArgsType.ROTATE_AXIS.getOfArgs());
-            if (val instanceof Number n) targetGroup.rotateAsAxis(n.doubleValue());
+            if (val instanceof Number n) {
+                targetGroup.rotateAsAxis(n.doubleValue());
+            }
         }
 
         if (argKeys.contains(PacketParticleGroupS2C.PacketArgsType.AXIS.getOfArgs())) {
             Object val = readValue(args, PacketParticleGroupS2C.PacketArgsType.AXIS.getOfArgs());
-            if (val instanceof Vec3 v) targetGroup.setAxis(RelativeLocation.of(v));
+            if (val instanceof Vec3 v) {
+                targetGroup.setAxis(RelativeLocation.of(v));
+            }
         }
 
         if (argKeys.contains(PacketParticleGroupS2C.PacketArgsType.CURRENT_TICK.getOfArgs())) {
             Object val = readValue(args, PacketParticleGroupS2C.PacketArgsType.CURRENT_TICK.getOfArgs());
-            if (val instanceof Number n) targetGroup.setTick(n.intValue());
+            if (val instanceof Number n) {
+                targetGroup.setTick(n.intValue());
+            }
         }
 
         if (argKeys.contains(PacketParticleGroupS2C.PacketArgsType.MAX_TICK.getOfArgs())) {
             Object val = readValue(args, PacketParticleGroupS2C.PacketArgsType.MAX_TICK.getOfArgs());
-            if (val instanceof Number n) targetGroup.setMaxTick(n.intValue());
+            if (val instanceof Number n) {
+                targetGroup.setMaxTick(n.intValue());
+            }
         }
 
         if (argKeys.contains(PacketParticleGroupS2C.PacketArgsType.INVOKE.getOfArgs())) {
@@ -110,15 +135,18 @@ public final class ClientParticleGroupPacketHandler {
                     Method method = targetGroup.getClass().getDeclaredMethod(methodName);
                     method.setAccessible(true);
                     method.invoke(targetGroup);
-                } catch (Throwable t) {
-                    LOGGER.debug("Failed to invoke '{}' on group {}: {}", methodName, groupUUID, t.getMessage());
+                } catch (Exception e) {
+                    logger.warn("Failed to invoke '{}' on particle group {} ({})",
+                            methodName, groupUUID, targetGroup.getClass().getName(), e);
                 }
             }
         }
 
         if (argKeys.contains(PacketParticleGroupS2C.PacketArgsType.SCALE.getOfArgs())) {
             Object val = readValue(args, PacketParticleGroupS2C.PacketArgsType.SCALE.getOfArgs());
-            if (val instanceof Number n) targetGroup.scale(n.doubleValue());
+            if (val instanceof Number n) {
+                targetGroup.scale(n.doubleValue());
+            }
         }
 
         if (targetGroup instanceof SequencedParticleGroup seq) {
@@ -162,4 +190,3 @@ public final class ClientParticleGroupPacketHandler {
         return buf == null ? null : buf.getLoadedValue();
     }
 }
-

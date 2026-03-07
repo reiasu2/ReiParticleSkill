@@ -12,13 +12,12 @@ import com.reiasu.reiparticlesapi.particles.control.ParticleController;
 import com.reiasu.reiparticlesapi.utils.Math3DUtil;
 import com.reiasu.reiparticlesapi.utils.RelativeLocation;
 import net.minecraft.client.multiplayer.ClientLevel;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -29,13 +28,9 @@ import java.util.function.Function;
 
 /**
  * Base class for particle style groups.
- * <p>
- * Manages a collection of controllable particles arranged at relative locations,
- * with support for display, scaling, rotation, teleportation, and server↔client sync.
  */
 public abstract class ParticleGroupStyle implements ServerController<ParticleGroupStyle>, Controllable<ParticleGroupStyle> {
 
-    // ---- Core identity ----
     private UUID uuid;
     private ResourceLocation registryKey;
     private boolean canceled;
@@ -50,16 +45,12 @@ public abstract class ParticleGroupStyle implements ServerController<ParticleGro
     private double visibleRange;
     private boolean autoToggle = true;
     private boolean displayed;
+    private boolean dirty = true;
 
-    // ---- Particle management ----
     private final ConcurrentHashMap<UUID, Controllable<?>> particles = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<Controllable<?>, RelativeLocation> particleLocations = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<UUID, Double> particleDefaultLength = new ConcurrentHashMap<>();
-
-    // ---- Tick actions ----
     private final List<Consumer<ParticleGroupStyle>> preTickActions = new ArrayList<>();
-
-    // ---- Constructors ----
 
     public ParticleGroupStyle() {
         this(96.0, UUID.randomUUID());
@@ -74,8 +65,6 @@ public abstract class ParticleGroupStyle implements ServerController<ParticleGro
     public void spawnInWorld(ServerLevel world, Vec3 pos) {
         ParticleStyleManager.spawnStyle(world, pos, this);
     }
-
-    // ---- Getters/Setters ----
 
     public UUID getUuid() {
         return uuid;
@@ -106,7 +95,8 @@ public abstract class ParticleGroupStyle implements ServerController<ParticleGro
     }
 
     public void setPos(Vec3 pos) {
-        this.pos = pos;
+        this.pos = pos == null ? Vec3.ZERO : pos;
+        markDirty();
     }
 
     public RelativeLocation getAxis() {
@@ -114,7 +104,8 @@ public abstract class ParticleGroupStyle implements ServerController<ParticleGro
     }
 
     public void setAxis(RelativeLocation axis) {
-        this.axis = axis;
+        this.axis = axis == null ? new RelativeLocation(0.0, 0.0, 1.0) : axis;
+        markDirty();
     }
 
     public double getRotate() {
@@ -123,6 +114,7 @@ public abstract class ParticleGroupStyle implements ServerController<ParticleGro
 
     public void setRotate(double rotate) {
         this.rotate = rotate;
+        markDirty();
     }
 
     public double getScale() {
@@ -131,6 +123,7 @@ public abstract class ParticleGroupStyle implements ServerController<ParticleGro
 
     public void setScale(double scale) {
         this.scale = scale;
+        markDirty();
     }
 
     public long getLastUpdatedGameTime() {
@@ -155,6 +148,7 @@ public abstract class ParticleGroupStyle implements ServerController<ParticleGro
 
     public void setVisibleRange(double visibleRange) {
         this.visibleRange = visibleRange;
+        markDirty();
     }
 
     public boolean getAutoToggle() {
@@ -163,6 +157,7 @@ public abstract class ParticleGroupStyle implements ServerController<ParticleGro
 
     public void setAutoToggle(boolean autoToggle) {
         this.autoToggle = autoToggle;
+        markDirty();
     }
 
     public boolean getClient() {
@@ -179,6 +174,7 @@ public abstract class ParticleGroupStyle implements ServerController<ParticleGro
 
     public void setDisplayed(boolean displayed) {
         this.displayed = displayed;
+        markDirty();
     }
 
     public ConcurrentHashMap<UUID, Controllable<?>> getParticles() {
@@ -193,39 +189,36 @@ public abstract class ParticleGroupStyle implements ServerController<ParticleGro
         return particleDefaultLength;
     }
 
-    // ---- Abstract methods that subclasses must implement ----
-
-    /**
-     * Return the current frame of particles: mapping from StyleData to relative location.
-     * Non-sequenced styles use this; sequenced styles return empty and use their own method.
-     */
-    public abstract Map<StyleData, RelativeLocation> getCurrentFrames();
-
-    /**
-     * Called when the style is first displayed (after particles are spawned).
-     */
-    public abstract void onDisplay();
-
-    // ---- Display lifecycle ----
-
-    /**
-     * Called before particles are spawned. Subclasses can modify the locations map.
-     */
-    public void beforeDisplay(Map<StyleData, RelativeLocation> styles) {
-        // Default no-op
+    public void markDirty() {
+        dirty = true;
     }
 
-    /**
-     * Display the style at the given position in the given world.
-     */
+    public boolean consumeDirty() {
+        boolean wasDirty = dirty;
+        dirty = false;
+        return wasDirty;
+    }
+
+    public void clearDirty() {
+        dirty = false;
+    }
+
+    public abstract Map<StyleData, RelativeLocation> getCurrentFrames();
+
+    public abstract void onDisplay();
+
+    public void beforeDisplay(Map<StyleData, RelativeLocation> styles) {
+    }
+
     public void display(Vec3 pos, Level world) {
-        if (displayed) {
+        if (displayed || world == null) {
             return;
         }
         this.displayed = true;
-        this.pos = pos;
+        this.pos = pos == null ? Vec3.ZERO : pos;
         this.world = world;
         this.client = world.isClientSide;
+        markDirty();
         if (!client) {
             onDisplay();
             return;
@@ -234,9 +227,6 @@ public abstract class ParticleGroupStyle implements ServerController<ParticleGro
         onDisplay();
     }
 
-    /**
-     * Refresh the display: clear existing particles and re-display.
-     */
     public void flush() {
         if (!particles.isEmpty()) {
             clear(true);
@@ -244,14 +234,10 @@ public abstract class ParticleGroupStyle implements ServerController<ParticleGro
         displayParticles();
     }
 
-    /**
-     * Spawn particles from getCurrentFrames().
-     */
     protected void displayParticles() {
-        Map<StyleData, RelativeLocation> locations = getCurrentFrames();
+        Map<StyleData, RelativeLocation> locations = new HashMap<>(getCurrentFrames());
         beforeDisplay(locations);
         toggleScale(locations);
-        // Rotate initial positions
         List<RelativeLocation> locs = new ArrayList<>(locations.values());
         Math3DUtil.rotateAsAxis(locs, axis, rotate);
 
@@ -279,21 +265,16 @@ public abstract class ParticleGroupStyle implements ServerController<ParticleGro
         }
     }
 
-    /**
-     * Clear all particles. If valid is true, keep the style alive; otherwise mark invalid.
-     */
     public void clear(boolean valid) {
-        for (Controllable<?> c : particles.values()) {
-            c.remove();
+        for (Controllable<?> controllable : particles.values()) {
+            controllable.remove();
         }
         particles.clear();
         particleLocations.clear();
         particleDefaultLength.clear();
+        markDirty();
     }
 
-    /**
-     * Record default scale lengths and apply current scale factor.
-     */
     protected void toggleScale(Map<? extends StyleData, RelativeLocation> locations) {
         if (particleDefaultLength.isEmpty()) {
             for (Map.Entry<? extends StyleData, RelativeLocation> entry : locations.entrySet()) {
@@ -304,57 +285,55 @@ public abstract class ParticleGroupStyle implements ServerController<ParticleGro
             return;
         }
         for (Map.Entry<? extends StyleData, RelativeLocation> entry : locations.entrySet()) {
-            UUID uuid = entry.getKey().getUuid();
-            Double defLen = particleDefaultLength.get(uuid);
-            if (defLen == null) continue;
+            UUID particleUuid = entry.getKey().getUuid();
+            Double defaultLength = particleDefaultLength.get(particleUuid);
+            if (defaultLength == null) {
+                continue;
+            }
             RelativeLocation rl = entry.getValue();
-            double currentLen = rl.length();
-            if (currentLen > 0.001) {
-                rl.multiply(defLen * scale / currentLen);
+            double currentLength = rl.length();
+            if (currentLength > 0.001) {
+                rl.multiply(defaultLength * scale / currentLength);
             }
         }
     }
 
-    /**
-     * Update displayed particles' scale.
-     */
     protected void toggleScaleDisplayed() {
         if (scale == 1.0) {
             return;
         }
         for (Map.Entry<Controllable<?>, RelativeLocation> entry : particleLocations.entrySet()) {
-            UUID puuid = entry.getKey().controlUUID();
-            Double defLen = particleDefaultLength.get(puuid);
-            if (defLen == null) continue;
+            UUID particleUuid = entry.getKey().controlUUID();
+            Double defaultLength = particleDefaultLength.get(particleUuid);
+            if (defaultLength == null) {
+                continue;
+            }
             RelativeLocation rl = entry.getValue();
-            double currentLen = rl.length();
-            if (currentLen > 0.001) {
-                rl.multiply(defLen * scale / currentLen);
+            double currentLength = rl.length();
+            if (currentLength > 0.001) {
+                rl.multiply(defaultLength * scale / currentLength);
             }
         }
     }
 
-    /**
-     * Teleport all particles to their current relative positions based on origin.
-     */
     protected void toggleRelative() {
         for (Map.Entry<Controllable<?>, RelativeLocation> entry : particleLocations.entrySet()) {
-            Controllable<?> c = entry.getKey();
+            Controllable<?> controllable = entry.getKey();
             RelativeLocation rl = entry.getValue();
-            c.teleportTo(rl.getX() + pos.x, rl.getY() + pos.y, rl.getZ() + pos.z);
+            controllable.teleportTo(rl.getX() + pos.x, rl.getY() + pos.y, rl.getZ() + pos.z);
         }
     }
-
-    // ---- Transform operations ----
 
     public void remove() {
         canceled = true;
         clear(false);
+        markDirty();
     }
 
     public void teleportTo(Vec3 to) {
-        this.pos = to;
+        this.pos = to == null ? Vec3.ZERO : to;
         toggleRelative();
+        markDirty();
     }
 
     public void rotateAsAxis(double radian) {
@@ -365,16 +344,24 @@ public abstract class ParticleGroupStyle implements ServerController<ParticleGro
             this.rotate -= Math.PI * 2;
         }
         toggleRelative();
+        markDirty();
     }
 
     public void rotateToPoint(RelativeLocation to) {
+        if (to == null) {
+            return;
+        }
         List<RelativeLocation> locs = new ArrayList<>(particleLocations.values());
         Math3DUtil.rotatePointsToPoint(locs, to, axis);
         this.axis = to;
         toggleRelative();
+        markDirty();
     }
 
     public void rotateToWithAngle(RelativeLocation to, double radian) {
+        if (to == null) {
+            return;
+        }
         List<RelativeLocation> locs = new ArrayList<>(particleLocations.values());
         Math3DUtil.rotatePointsToPoint(locs, to, axis);
         List<RelativeLocation> locs2 = new ArrayList<>(particleLocations.values());
@@ -385,6 +372,7 @@ public abstract class ParticleGroupStyle implements ServerController<ParticleGro
             this.rotate -= Math.PI * 2;
         }
         toggleRelative();
+        markDirty();
     }
 
     public void scale(double scale) {
@@ -392,6 +380,7 @@ public abstract class ParticleGroupStyle implements ServerController<ParticleGro
         if (displayed) {
             toggleScaleDisplayed();
         }
+        markDirty();
     }
 
     public void addPreTickAction(Consumer<ParticleGroupStyle> action) {
@@ -400,8 +389,6 @@ public abstract class ParticleGroupStyle implements ServerController<ParticleGro
         }
     }
 
-    // ---- Packet args ----
-
     public Map<String, ParticleControllerDataBuffer<?>> writePacketArgs() {
         return new HashMap<>();
     }
@@ -409,21 +396,18 @@ public abstract class ParticleGroupStyle implements ServerController<ParticleGro
     public void readPacketArgs(Map<String, ? extends ParticleControllerDataBuffer<?>> args) {
     }
 
-    // ---- Change with callback ----
-
     public void change(Consumer<ParticleGroupStyle> invoker, Map<String, ? extends ParticleControllerDataBuffer<?>> args) {
         if (invoker != null) {
             invoker.accept(this);
         }
-        // Server-side would sync here; for now just apply locally
         readPacketArgs(args);
+        markDirty();
     }
-
-    // ---- ServerController / Controllable interface ----
 
     @Override
     public void load(Map<String, ? extends ParticleControllerDataBuffer<?>> args) {
         readPacketArgs(args);
+        markDirty();
     }
 
     @Override
@@ -434,6 +418,7 @@ public abstract class ParticleGroupStyle implements ServerController<ParticleGro
     @Override
     public void change(Map<String, ? extends ParticleControllerDataBuffer<?>> args) {
         readPacketArgs(args);
+        markDirty();
     }
 
     @Override
@@ -444,6 +429,7 @@ public abstract class ParticleGroupStyle implements ServerController<ParticleGro
     @Override
     public void cancel() {
         canceled = true;
+        markDirty();
     }
 
     @Override
@@ -469,12 +455,6 @@ public abstract class ParticleGroupStyle implements ServerController<ParticleGro
         displayedTime++;
     }
 
-    // ---- Inner class: StyleData ----
-
-    /**
-     * Holds the data needed to create a single particle in a style:
-     * the displayer builder, particle handler, and controller handler.
-     */
     public static class StyleData {
         private final UUID uuid;
         private final Function<UUID, ParticleDisplayer> displayerBuilder;
@@ -484,8 +464,10 @@ public abstract class ParticleGroupStyle implements ServerController<ParticleGro
         public StyleData(Function<UUID, ParticleDisplayer> displayerBuilder) {
             this.uuid = UUID.randomUUID();
             this.displayerBuilder = displayerBuilder;
-            this.particleHandler = p -> {};
-            this.particleControllerHandler = c -> {};
+            this.particleHandler = particle -> {
+            };
+            this.particleControllerHandler = controller -> {
+            };
         }
 
         public UUID getUuid() {
@@ -504,17 +486,11 @@ public abstract class ParticleGroupStyle implements ServerController<ParticleGro
             return particleControllerHandler;
         }
 
-        /**
-         * Set a handler that configures the particle after creation.
-         */
         public StyleData withParticleHandler(Consumer<ControllableParticle> handler) {
             this.particleHandler = handler;
             return this;
         }
 
-        /**
-         * Set a handler that configures the particle controller after creation.
-         */
         public StyleData withParticleControllerHandler(Consumer<ParticleController> handler) {
             this.particleControllerHandler = handler;
             return this;

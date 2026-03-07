@@ -19,10 +19,13 @@
 package com.reiasu.reiparticlesapi.network.particle.emitters;
 
 import com.reiasu.reiparticlesapi.testutil.UnsafeAllocator;
+import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.phys.Vec3;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
@@ -69,12 +72,52 @@ class ParticleEmittersManagerTest {
         assertEquals(pos, emitter.position());
     }
 
+    @Test
+    void shouldContinueServerTickAfterEmitterFailure() {
+        FailingEmitter failing = new FailingEmitter();
+        CountingEmitter healthy = new CountingEmitter();
+        healthy.setMaxTick(4);
+        ParticleEmittersManager.spawnEmitters(failing);
+        ParticleEmittersManager.spawnEmitters(healthy);
+
+        ParticleEmittersManager.tickAll();
+
+        assertEquals(1, healthy.emittedTicks);
+        assertEquals(1, ParticleEmittersManager.activeCount());
+        assertSame(healthy, ParticleEmittersManager.getEmitters().get(0));
+    }
+
+    @Test
+    void shouldContinueClientTickAfterEmitterFailure() {
+        ClientLevel clientWorld = UnsafeAllocator.allocate(ClientLevel.class);
+        FailingEmitter failing = new FailingEmitter();
+        failing.setUuid(UUID.randomUUID());
+        CountingEmitter healthy = new CountingEmitter();
+        healthy.setUuid(UUID.randomUUID());
+        healthy.setMaxTick(4);
+        ParticleEmittersManager.createOrChangeClient(failing, clientWorld);
+        ParticleEmittersManager.createOrChangeClient(healthy, clientWorld);
+
+        ParticleEmittersManager.tickClient();
+
+        assertEquals(1, healthy.emittedTicks);
+        assertEquals(1, ParticleEmittersManager.getClientEmitters().size());
+        assertSame(healthy, ParticleEmittersManager.getClientEmitters().get(healthy.getUuid()));
+    }
+
     private static final class CountingEmitter extends ParticleEmitters {
         private int emittedTicks;
 
         @Override
         protected void emitTick() {
             emittedTicks++;
+        }
+    }
+
+    private static final class FailingEmitter extends ParticleEmitters {
+        @Override
+        protected void emitTick() {
+            throw new IllegalStateException("boom");
         }
     }
 }

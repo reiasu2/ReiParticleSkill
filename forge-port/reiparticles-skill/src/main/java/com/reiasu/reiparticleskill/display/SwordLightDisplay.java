@@ -66,6 +66,7 @@ public class SwordLightDisplay extends DisplayEntity implements ServerMovableDis
     @Override
     public void setPos(Vec3 pos) {
         this.pos = pos == null ? Vec3.ZERO : pos;
+        markDirty();
     }
 
     public Vec3 getEnd() {
@@ -74,6 +75,7 @@ public class SwordLightDisplay extends DisplayEntity implements ServerMovableDis
 
     public void setEnd(Vec3 end) {
         this.end = end == null ? pos : end;
+        markDirty();
     }
 
     public int getMaxAge() {
@@ -82,6 +84,7 @@ public class SwordLightDisplay extends DisplayEntity implements ServerMovableDis
 
     public void setMaxAge(int maxAge) {
         this.maxAge = Math.max(1, maxAge);
+        markDirty();
     }
 
     public int getBloomCount() {
@@ -90,6 +93,7 @@ public class SwordLightDisplay extends DisplayEntity implements ServerMovableDis
 
     public void setBloomCount(int bloomCount) {
         this.bloomCount = Math.max(0, bloomCount);
+        markDirty();
     }
 
     public float getThinness() {
@@ -98,6 +102,7 @@ public class SwordLightDisplay extends DisplayEntity implements ServerMovableDis
 
     public void setThinness(float thinness) {
         this.thinness = Math.max(0.01F, thinness);
+        markDirty();
     }
 
     public int getAge() {
@@ -111,6 +116,7 @@ public class SwordLightDisplay extends DisplayEntity implements ServerMovableDis
     @Override
     public void teleportTo(Vec3 pos) {
         this.pos = pos == null ? Vec3.ZERO : pos;
+        markDirty();
     }
 
     @Override
@@ -180,4 +186,5 @@ public class SwordLightDisplay extends DisplayEntity implements ServerMovableDis
         }
     }
 }
+
 

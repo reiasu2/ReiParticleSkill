@@ -25,4 +25,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: reiparticleskill-jar
-          path: forge-port/build/libs/*.jar
+          path: forge-port/reiparticles-forge-runtime/build/libs/*.jar

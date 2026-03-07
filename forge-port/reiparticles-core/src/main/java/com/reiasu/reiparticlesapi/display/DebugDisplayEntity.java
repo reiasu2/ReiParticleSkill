@@ -101,6 +101,7 @@ public class DebugDisplayEntity extends DisplayEntity {
     @Override
     public void setPos(Vec3 pos) {
         this.pos = pos == null ? Vec3.ZERO : pos;
+        markDirty();
     }
 
     @Override
@@ -140,4 +141,5 @@ public class DebugDisplayEntity extends DisplayEntity {
         }
     }
 }
+
 

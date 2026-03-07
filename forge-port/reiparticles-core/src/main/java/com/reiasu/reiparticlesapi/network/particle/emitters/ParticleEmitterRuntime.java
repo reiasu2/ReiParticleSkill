@@ -2,6 +2,7 @@
 // Copyright (C) 2025 Reiasu
 package com.reiasu.reiparticlesapi.network.particle.emitters;
 
+import com.mojang.logging.LogUtils;
 import com.reiasu.reiparticlesapi.config.APIConfig;
 import com.reiasu.reiparticlesapi.event.ReiEventBus;
 import com.reiasu.reiparticlesapi.event.events.particle.emitter.EmitterRemoveEvent;
@@ -10,15 +11,19 @@ import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
+import org.slf4j.Logger;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.function.Function;
 
 final class ParticleEmitterRuntime {
+    private static final Logger LOGGER = LogUtils.getLogger();
+
     private final List<ParticleEmitters> emitters = new ArrayList<>();
     private final ParticleEmitterVisibilityTracker visibilityTracker = new ParticleEmitterVisibilityTracker();
     private final ParticleEmitterClientStore clientStore = new ParticleEmitterClientStore();
@@ -91,16 +96,24 @@ final class ParticleEmitterRuntime {
     void tickAll() {
         long tick = visibilityTracker.beginTick();
         synchronized (emitters) {
-            emitters.removeIf(current -> {
-                visibilityTracker.updateClientVisible(current, tick);
-                current.tick();
+            Iterator<ParticleEmitters> iterator = emitters.iterator();
+            while (iterator.hasNext()) {
+                ParticleEmitters current = iterator.next();
+                try {
+                    visibilityTracker.updateClientVisible(current, tick);
+                    current.tick();
+                } catch (Exception e) {
+                    LOGGER.warn("Emitter {} ({}) failed during server tick; removing emitter",
+                            current.getUuid(), current.getClass().getName(), e);
+                    current.cancel();
+                }
                 if (!current.getCanceled()) {
-                    return false;
+                    continue;
                 }
                 visibilityTracker.removeAllViews(current);
                 ReiEventBus.call(new EmitterRemoveEvent(current, false));
-                return true;
-            });
+                iterator.remove();
+            }
         }
         visibilityTracker.pruneDisconnectedPlayers(serverEmittersSnapshot());
     }

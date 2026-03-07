@@ -2,6 +2,7 @@
 // Copyright (C) 2025 Reiasu
 package com.reiasu.reiparticlesapi.network.particle.style;
 
+import com.mojang.logging.LogUtils;
 import com.reiasu.reiparticlesapi.network.ReiParticlesNetwork;
 import com.reiasu.reiparticlesapi.network.buffer.ParticleControllerDataBuffer;
 import com.reiasu.reiparticlesapi.network.buffer.ParticleControllerDataBuffers;
@@ -12,16 +13,17 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
+import org.slf4j.Logger;
 
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 public final class ParticleStyleManager {
+    private static final Logger LOGGER = LogUtils.getLogger();
     private static final Map<UUID, ParticleGroupStyle> SERVER_VIEW_STYLES = new ConcurrentHashMap<>();
     private static final Map<UUID, Set<UUID>> VISIBLE = new ConcurrentHashMap<>();
     private static final Map<UUID, ParticleGroupStyle> CLIENT_VIEW_STYLES = new ConcurrentHashMap<>();
@@ -83,57 +85,75 @@ public final class ParticleStyleManager {
                     addStylePlayerView(player, style);
                 }
             }
+            style.clearDirty();
         }
     }
 
     public static void doTickClient() {
-        CLIENT_VIEW_STYLES.entrySet().removeIf(entry -> {
+        Iterator<Map.Entry<UUID, ParticleGroupStyle>> iterator = CLIENT_VIEW_STYLES.entrySet().iterator();
+        while (iterator.hasNext()) {
+            Map.Entry<UUID, ParticleGroupStyle> entry = iterator.next();
             ParticleGroupStyle style = entry.getValue();
-            style.tick();
-            return style.getCanceled();
-        });
+            try {
+                style.tick();
+            } catch (Exception e) {
+                LOGGER.warn("Particle style {} ({}) failed during client tick; removing style",
+                        style.getUuid(), style.getClass().getName(), e);
+                style.remove();
+            }
+            if (style.getCanceled()) {
+                iterator.remove();
+            }
+        }
     }
 
     public static void doTickServer() {
-        SERVER_VIEW_STYLES.entrySet().removeIf(entry -> {
+        Iterator<Map.Entry<UUID, ParticleGroupStyle>> iterator = SERVER_VIEW_STYLES.entrySet().iterator();
+        while (iterator.hasNext()) {
+            Map.Entry<UUID, ParticleGroupStyle> entry = iterator.next();
             ParticleGroupStyle style = entry.getValue();
-            if (!(style.getWorld() instanceof ServerLevel serverLevel)) {
-                removeAllPlayerView(style, null);
-                return true;
-            }
+            ServerLevel serverLevel = style.getWorld() instanceof ServerLevel level ? level : null;
+            try {
+                if (serverLevel == null) {
+                    removeAllPlayerView(style, null);
+                    iterator.remove();
+                    continue;
+                }
 
-            style.setLastUpdatedGameTime(serverLevel.getGameTime());
-            upgradeVisible(style, serverLevel);
-            style.tick();
+                style.setLastUpdatedGameTime(serverLevel.getGameTime());
+                upgradeVisible(style, serverLevel);
+                style.tick();
 
-            if (style.getAutoToggle() && !style.getCanceled()) {
-                PacketParticleStyleS2C changePacket = buildAutoTogglePacket(style);
-                for (UUID playerId : filterVisiblePlayer(style.getUuid())) {
-                    ServerPlayer player = serverLevel.getServer().getPlayerList().getPlayer(playerId);
-                    if (player != null) {
+                if (style.getAutoToggle() && !style.getCanceled() && style.consumeDirty()) {
+                    PacketParticleStyleS2C changePacket = buildAutoTogglePacket(style);
+                    for (ServerPlayer player : collectVisiblePlayers(serverLevel, style.getUuid())) {
                         ReiParticlesNetwork.sendTo(player, changePacket);
                     }
                 }
+            } catch (Exception e) {
+                LOGGER.warn("Particle style {} ({}) failed during server tick; removing style",
+                        style.getUuid(), style.getClass().getName(), e);
+                style.remove();
             }
 
             if (style.getCanceled()) {
                 removeAllPlayerView(style, serverLevel);
-                return true;
+                iterator.remove();
             }
-            return false;
-        });
+        }
 
         pruneDisconnectedPlayers();
     }
 
-    private static Set<UUID> filterVisiblePlayer(UUID styleId) {
-        Set<UUID> result = new HashSet<>();
-        for (Map.Entry<UUID, Set<UUID>> entry : VISIBLE.entrySet()) {
-            if (entry.getValue().contains(styleId)) {
-                result.add(entry.getKey());
+    private static Iterable<ServerPlayer> collectVisiblePlayers(ServerLevel level, UUID styleId) {
+        java.util.ArrayList<ServerPlayer> players = new java.util.ArrayList<>();
+        for (ServerPlayer player : level.players()) {
+            Set<UUID> visibleSet = VISIBLE.get(player.getUUID());
+            if (visibleSet != null && visibleSet.contains(styleId)) {
+                players.add(player);
             }
         }
-        return result;
+        return players;
     }
 
     private static void upgradeVisible(ParticleGroupStyle style, ServerLevel level) {

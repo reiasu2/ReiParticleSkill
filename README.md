@@ -18,10 +18,10 @@ cd forge-port
 ```
 
 Run Gradle from `forge-port`.
-If you just want a quick build from the repository root, run `build.cmd`. It builds the mod without tests and copies the jar to your Desktop.
+If you just want a quick build from the repository root, run `build.cmd`. It builds the Forge runtime module without tests and copies the distributable jar to your Desktop.
 
-Output jar: `forge-port/build/libs/reiparticleskill-1.0-SNAPSHOT-forge-port.jar`
-Tests: `cd forge-port` then `.\gradlew test`
+Canonical distributable jar: `forge-port/reiparticles-forge-runtime/build/libs/reiparticleskill-1.0-SNAPSHOT-forge-port.jar`
+Tests: `cd forge-port` then `.\gradlew test check`
 
 ## Development
 

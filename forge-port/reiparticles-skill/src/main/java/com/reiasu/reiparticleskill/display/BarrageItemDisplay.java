@@ -105,6 +105,7 @@ public class BarrageItemDisplay extends DisplayEntity implements ServerMovableDi
 
     public void setItem(ItemStack item) {
         this.item = item == null ? ItemStack.EMPTY : item.copy();
+        markDirty();
     }
 
     public boolean isBlock() {
@@ -113,6 +114,7 @@ public class BarrageItemDisplay extends DisplayEntity implements ServerMovableDi
 
     public void setBlock(boolean block) {
         this.block = block;
+        markDirty();
     }
 
     public int getSign() {
@@ -121,6 +123,7 @@ public class BarrageItemDisplay extends DisplayEntity implements ServerMovableDi
 
     public void setSign(int sign) {
         this.sign = sign;
+        markDirty();
     }
 
     @Override
@@ -131,6 +134,7 @@ public class BarrageItemDisplay extends DisplayEntity implements ServerMovableDi
     @Override
     public void setPos(Vec3 pos) {
         this.pos = pos == null ? Vec3.ZERO : pos;
+        markDirty();
     }
 
     public Vec3 getPrevPos() {
@@ -139,6 +143,7 @@ public class BarrageItemDisplay extends DisplayEntity implements ServerMovableDi
 
     public void setPrevPos(Vec3 prevPos) {
         this.prevPos = prevPos == null ? Vec3.ZERO : prevPos;
+        markDirty();
     }
 
     public Vec3 getVelocity() {
@@ -147,6 +152,7 @@ public class BarrageItemDisplay extends DisplayEntity implements ServerMovableDi
 
     public void setVelocity(Vec3 velocity) {
         this.velocity = velocity == null ? Vec3.ZERO : velocity;
+        markDirty();
     }
 
     @Override
@@ -157,6 +163,7 @@ public class BarrageItemDisplay extends DisplayEntity implements ServerMovableDi
     @Override
     public void setYaw(float yaw) {
         this.yaw = yaw;
+        markDirty();
     }
 
     public float getPrevYaw() {
@@ -165,6 +172,7 @@ public class BarrageItemDisplay extends DisplayEntity implements ServerMovableDi
 
     public void setPrevYaw(float prevYaw) {
         this.prevYaw = prevYaw;
+        markDirty();
     }
 
     @Override
@@ -175,6 +183,7 @@ public class BarrageItemDisplay extends DisplayEntity implements ServerMovableDi
     @Override
     public void setPitch(float pitch) {
         this.pitch = pitch;
+        markDirty();
     }
 
     public float getPrevPitch() {
@@ -183,6 +192,7 @@ public class BarrageItemDisplay extends DisplayEntity implements ServerMovableDi
 
     public void setPrevPitch(float prevPitch) {
         this.prevPitch = prevPitch;
+        markDirty();
     }
 
     @Override
@@ -193,6 +203,7 @@ public class BarrageItemDisplay extends DisplayEntity implements ServerMovableDi
     @Override
     public void setRoll(float roll) {
         this.roll = roll;
+        markDirty();
     }
 
     public float getPrevRoll() {
@@ -201,6 +212,7 @@ public class BarrageItemDisplay extends DisplayEntity implements ServerMovableDi
 
     public void setPrevRoll(float prevRoll) {
         this.prevRoll = prevRoll;
+        markDirty();
     }
 
     @Override
@@ -211,6 +223,7 @@ public class BarrageItemDisplay extends DisplayEntity implements ServerMovableDi
     @Override
     public void setScale(float scale) {
         this.scale = scale;
+        markDirty();
     }
 
     public float getPreScale() {
@@ -219,6 +232,7 @@ public class BarrageItemDisplay extends DisplayEntity implements ServerMovableDi
 
     public void setPreScale(float preScale) {
         this.preScale = preScale;
+        markDirty();
     }
 
     public float getTargetScale() {
@@ -227,6 +241,7 @@ public class BarrageItemDisplay extends DisplayEntity implements ServerMovableDi
 
     public void setTargetScale(float targetScale) {
         this.targetScale = targetScale;
+        markDirty();
     }
 
     public float getScaledSpeed() {
@@ -235,6 +250,7 @@ public class BarrageItemDisplay extends DisplayEntity implements ServerMovableDi
 
     public void setScaledSpeed(float scaledSpeed) {
         this.scaledSpeed = Math.max(0.001F, scaledSpeed);
+        markDirty();
     }
 
     public float getTargetYaw() {
@@ -243,6 +259,7 @@ public class BarrageItemDisplay extends DisplayEntity implements ServerMovableDi
 
     public void setTargetYaw(float targetYaw) {
         this.targetYaw = targetYaw;
+        markDirty();
     }
 
     public float getTargetPitch() {
@@ -251,6 +268,7 @@ public class BarrageItemDisplay extends DisplayEntity implements ServerMovableDi
 
     public void setTargetPitch(float targetPitch) {
         this.targetPitch = targetPitch;
+        markDirty();
     }
 
     public float getRotateSpeed() {
@@ -259,6 +277,7 @@ public class BarrageItemDisplay extends DisplayEntity implements ServerMovableDi
 
     public void setRotateSpeed(float rotateSpeed) {
         this.rotateSpeed = Math.max(0.0F, rotateSpeed);
+        markDirty();
     }
 
     public int getBlendCount() {
@@ -267,6 +286,7 @@ public class BarrageItemDisplay extends DisplayEntity implements ServerMovableDi
 
     public void setBlendCount(int blendCount) {
         this.blendCount = Math.max(0, blendCount);
+        markDirty();
     }
 
     public int getAge() {
@@ -275,6 +295,7 @@ public class BarrageItemDisplay extends DisplayEntity implements ServerMovableDi
 
     public void setAge(int age) {
         this.age = Math.max(0, age);
+        markDirty();
     }
 
     public int getDisplayTick() {
@@ -283,6 +304,7 @@ public class BarrageItemDisplay extends DisplayEntity implements ServerMovableDi
 
     public void setDisplayTick(int displayTick) {
         this.displayTick = Math.max(0, displayTick);
+        markDirty();
     }
 
     public void rotateToPoint(RelativeLocation to) {
@@ -296,6 +318,7 @@ public class BarrageItemDisplay extends DisplayEntity implements ServerMovableDi
         copy.normalize();
         targetYaw = (float) Math.toDegrees(Math.atan2(-copy.getX(), copy.getZ()));
         targetPitch = (float) Math.toDegrees(Math.atan2(-copy.getY(), Math.sqrt(copy.getX() * copy.getX() + copy.getZ() * copy.getZ())));
+        markDirty();
     }
 
     public float yaw(float delta) {
@@ -362,10 +385,12 @@ public class BarrageItemDisplay extends DisplayEntity implements ServerMovableDi
         Vec3 safe = pos == null ? Vec3.ZERO : pos;
         this.prevPos = this.pos;
         this.pos = safe;
+        markDirty();
     }
 
     public void remove() {
         cancel();
+        markDirty();
     }
 
     @Override
@@ -396,6 +421,7 @@ public class BarrageItemDisplay extends DisplayEntity implements ServerMovableDi
         this.blendCount = d.blendCount;
         this.age = d.age;
         this.displayTick = d.displayTick;
+        markDirty();
     }
 
     private static float approachAngle(float current, float target, float maxStep) {
@@ -454,4 +480,5 @@ public class BarrageItemDisplay extends DisplayEntity implements ServerMovableDi
         }
     }
 }
+
 

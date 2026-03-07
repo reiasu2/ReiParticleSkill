@@ -43,7 +43,6 @@ public final class RuntimePortAutoRegistrar {
         int emitters = 0;
         int styles = 0;
 
-        // Register packages for scanning, then scan
         for (String pkg : packages) {
             ReiAPIScanner.registerPackage(pkg);
         }
@@ -52,7 +51,6 @@ public final class RuntimePortAutoRegistrar {
         Collection<Class<?>> annotated = ReiAPIScanner.INSTANCE.getClassesWithAnnotation(ReiAutoRegister.class);
 
         for (Class<?> clazz : annotated) {
-            // --- Emitter registration ---
             if (ParticleEmitters.class.isAssignableFrom(clazz)) {
                 ResourceLocation codecId = getStaticResourceLocationField(clazz, "CODEC_ID");
                 if (codecId == null) {
@@ -69,16 +67,15 @@ public final class RuntimePortAutoRegistrar {
                 continue;
             }
 
-            // --- Style registration ---
             if (ParticleGroupStyle.class.isAssignableFrom(clazz)) {
                 ResourceLocation registryKey = getStaticResourceLocationField(clazz, "REGISTRY_KEY");
                 if (registryKey == null) {
                     logger.warn("Style {} has @ReiAutoRegister but no REGISTRY_KEY field", clazz.getName());
                     continue;
                 }
-                ParticleStyleProvider<?> provider = findProvider(clazz);
+                ParticleStyleProvider<?> provider = findProvider(clazz, logger);
                 if (provider == null) {
-                    logger.warn("Style {} has @ReiAutoRegister but no Provider inner class", clazz.getName());
+                    logger.warn("Style {} has @ReiAutoRegister but no usable Provider inner class", clazz.getName());
                     continue;
                 }
                 ParticleStyleManager.register(registryKey, provider);
@@ -121,20 +118,17 @@ public final class RuntimePortAutoRegistrar {
     }
 
     @SuppressWarnings("unchecked")
-    private static ParticleStyleProvider<?> findProvider(Class<?> clazz) {
+    private static ParticleStyleProvider<?> findProvider(Class<?> clazz, Logger logger) {
         for (Class<?> inner : clazz.getDeclaredClasses()) {
             if (inner.getSimpleName().equals("Provider")
                     && ParticleStyleProvider.class.isAssignableFrom(inner)) {
                 try {
                     return (ParticleStyleProvider<?>) inner.getDeclaredConstructor().newInstance();
                 } catch (Exception e) {
-                    // Log so that Provider instantiation failures are visible during debugging
-                    com.mojang.logging.LogUtils.getLogger().debug(
-                            "Failed to instantiate Provider in {}: {}", clazz.getName(), e.getMessage());
+                    logger.warn("Failed to instantiate Provider in {} via @ReiAutoRegister", clazz.getName(), e);
                 }
             }
         }
         return null;
     }
 }
-

@@ -65,6 +65,7 @@ public class LightFlashDisplay extends DisplayEntity implements ServerMovableDis
     @Override
     public void setPos(Vec3 pos) {
         this.pos = pos == null ? Vec3.ZERO : pos;
+        markDirty();
     }
 
     public int getBloomCount() {
@@ -73,6 +74,7 @@ public class LightFlashDisplay extends DisplayEntity implements ServerMovableDis
 
     public void setBloomCount(int bloomCount) {
         this.bloomCount = Math.max(0, bloomCount);
+        markDirty();
     }
 
     public int getAge() {
@@ -81,6 +83,7 @@ public class LightFlashDisplay extends DisplayEntity implements ServerMovableDis
 
     public void setAge(int age) {
         this.age = Math.max(0, age);
+        markDirty();
     }
 
     public int getMaxAge() {
@@ -89,6 +92,7 @@ public class LightFlashDisplay extends DisplayEntity implements ServerMovableDis
 
     public void setMaxAge(int maxAge) {
         this.maxAge = Math.max(1, maxAge);
+        markDirty();
     }
 
     public float getLengthMax() {
@@ -97,6 +101,7 @@ public class LightFlashDisplay extends DisplayEntity implements ServerMovableDis
 
     public void setLengthMax(float lengthMax) {
         this.lengthMax = Math.max(1.0F, lengthMax);
+        markDirty();
     }
 
     public float getThicknessMax() {
@@ -105,11 +110,13 @@ public class LightFlashDisplay extends DisplayEntity implements ServerMovableDis
 
     public void setThicknessMax(float thicknessMax) {
         this.thicknessMax = Math.max(0.1F, thicknessMax);
+        markDirty();
     }
 
     @Override
     public void teleportTo(Vec3 pos) {
         this.pos = pos == null ? Vec3.ZERO : pos;
+        markDirty();
     }
 
     @Override
@@ -172,4 +179,5 @@ public class LightFlashDisplay extends DisplayEntity implements ServerMovableDis
         }
     }
 }
+
 
