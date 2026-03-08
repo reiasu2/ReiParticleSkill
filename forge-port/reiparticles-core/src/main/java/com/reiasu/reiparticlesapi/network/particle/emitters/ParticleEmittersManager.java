@@ -69,6 +69,10 @@ public final class ParticleEmittersManager {
         RUNTIME.clear();
     }
 
+    public static void clearClient() {
+        RUNTIME.clearClient();
+    }
+
     public static List<ParticleEmitters> getEmitters() {
         return RUNTIME.getEmitters();
     }

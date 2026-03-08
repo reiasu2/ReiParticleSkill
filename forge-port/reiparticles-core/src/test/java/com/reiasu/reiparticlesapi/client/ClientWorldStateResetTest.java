@@ -7,13 +7,17 @@ import com.reiasu.reiparticlesapi.display.DisplayEntityManager;
 import com.reiasu.reiparticlesapi.network.particle.composition.CompositionData;
 import com.reiasu.reiparticlesapi.network.particle.composition.ParticleComposition;
 import com.reiasu.reiparticlesapi.network.particle.composition.manager.ParticleCompositionManager;
+import com.reiasu.reiparticlesapi.network.particle.emitters.ParticleEmitters;
+import com.reiasu.reiparticlesapi.network.particle.emitters.ParticleEmittersManager;
 import com.reiasu.reiparticlesapi.network.particle.style.ParticleGroupStyle;
 import com.reiasu.reiparticlesapi.network.particle.style.ParticleStyleManager;
 import com.reiasu.reiparticlesapi.particles.control.group.ClientParticleGroupManager;
 import com.reiasu.reiparticlesapi.particles.control.group.ControllableParticleGroup;
 import com.reiasu.reiparticlesapi.renderer.RenderEntity;
 import com.reiasu.reiparticlesapi.renderer.client.ClientRenderEntityManager;
+import com.reiasu.reiparticlesapi.testutil.UnsafeAllocator;
 import com.reiasu.reiparticlesapi.utils.RelativeLocation;
+import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
@@ -23,12 +27,14 @@ import org.junit.jupiter.api.Test;
 import java.util.Map;
 import java.util.UUID;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ClientWorldStateResetTest {
     @AfterEach
     void cleanup() {
+        ParticleEmittersManager.clear();
         DisplayEntityManager.INSTANCE.clearClient();
         ParticleStyleManager.clearAllVisible();
         ClientRenderEntityManager.INSTANCE.clear();
@@ -43,15 +49,23 @@ class ClientWorldStateResetTest {
         DummyRenderEntity renderEntity = new DummyRenderEntity();
         DummyParticleGroup group = new DummyParticleGroup();
         DummyComposition composition = new DummyComposition(Vec3.ZERO, null);
+        DummyEmitter emitter = new DummyEmitter();
+        emitter.setUuid(UUID.randomUUID());
+        ClientLevel clientWorld = UnsafeAllocator.allocate(ClientLevel.class);
 
         DisplayEntityManager.INSTANCE.addClient(display);
         ParticleStyleManager.getClientViewStyles().put(style.getUuid(), style);
         ClientRenderEntityManager.INSTANCE.add(renderEntity);
         ClientParticleGroupManager.INSTANCE.addVisibleGroup(group);
         ParticleCompositionManager.INSTANCE.addClient(composition);
+        ParticleEmittersManager.createOrChangeClient(emitter, clientWorld);
+
+        assertFalse(emitter.getCanceled());
 
         ClientWorldStateReset.reset();
 
+        assertTrue(ParticleEmittersManager.getClientEmitters().isEmpty());
+        assertTrue(emitter.getCanceled());
         assertTrue(DisplayEntityManager.INSTANCE.getClientView().isEmpty());
         assertTrue(ParticleStyleManager.getClientViewStyles().isEmpty());
         assertTrue(ClientRenderEntityManager.INSTANCE.getEntities().isEmpty());
@@ -120,5 +134,8 @@ class ClientWorldStateResetTest {
         @Override
         public void onDisplay() {
         }
+    }
+
+    private static final class DummyEmitter extends ParticleEmitters {
     }
 }

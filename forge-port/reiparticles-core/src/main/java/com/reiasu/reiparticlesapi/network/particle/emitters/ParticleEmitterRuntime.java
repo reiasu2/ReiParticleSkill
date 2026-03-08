@@ -139,6 +139,10 @@ final class ParticleEmitterRuntime {
         clientStore.clear();
     }
 
+    void clearClient() {
+        clientStore.clear();
+    }
+
     List<ParticleEmitters> getEmitters() {
         return Collections.unmodifiableList(serverEmittersSnapshot());
     }

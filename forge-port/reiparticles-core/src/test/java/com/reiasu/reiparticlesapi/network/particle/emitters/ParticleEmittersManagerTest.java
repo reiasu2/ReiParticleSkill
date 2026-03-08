@@ -28,7 +28,9 @@ import org.junit.jupiter.api.Test;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ParticleEmittersManagerTest {
     @AfterEach
@@ -103,6 +105,23 @@ class ParticleEmittersManagerTest {
         assertEquals(1, healthy.emittedTicks);
         assertEquals(1, ParticleEmittersManager.getClientEmitters().size());
         assertSame(healthy, ParticleEmittersManager.getClientEmitters().get(healthy.getUuid()));
+    }
+
+    @Test
+    void shouldClearOnlyClientEmitters() {
+        ClientLevel clientWorld = UnsafeAllocator.allocate(ClientLevel.class);
+        CountingEmitter serverEmitter = new CountingEmitter();
+        CountingEmitter clientEmitter = new CountingEmitter();
+        clientEmitter.setUuid(UUID.randomUUID());
+        ParticleEmittersManager.spawnEmitters(serverEmitter);
+        ParticleEmittersManager.createOrChangeClient(clientEmitter, clientWorld);
+
+        ParticleEmittersManager.clearClient();
+
+        assertEquals(1, ParticleEmittersManager.activeCount());
+        assertTrue(ParticleEmittersManager.getClientEmitters().isEmpty());
+        assertTrue(clientEmitter.getCanceled());
+        assertFalse(serverEmitter.getCanceled());
     }
 
     private static final class CountingEmitter extends ParticleEmitters {
