@@ -48,4 +48,8 @@ public final class PathMotionManager {
             motion.apply(pos);
         }
     }
+
+    public void clear() {
+        motions.clear();
+    }
 }

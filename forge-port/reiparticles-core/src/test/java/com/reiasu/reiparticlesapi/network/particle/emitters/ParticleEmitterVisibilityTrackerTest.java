@@ -39,4 +39,10 @@ final class ParticleEmitterVisibilityTrackerTest {
         }));
         assertEquals(0, sendAttempts.get());
     }
+
+    @Test
+    void shouldTreatSquaredDistanceWithinRangeAsVisible() {
+        assertTrue(ParticleEmitterVisibilityTracker.canViewEmitter(81.0, 100.0));
+        assertFalse(ParticleEmitterVisibilityTracker.canViewEmitter(121.0, 100.0));
+    }
 }

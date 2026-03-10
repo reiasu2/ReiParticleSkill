@@ -3,7 +3,7 @@
 package com.reiasu.reiparticleskill.display;
 
 import com.reiasu.reiparticlesapi.display.DisplayEntity;
-import io.netty.buffer.Unpooled;
+import com.reiasu.reiparticlesapi.network.buffer.FriendlyByteBufs;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerLevel;
@@ -33,17 +33,15 @@ public class SwordLightDisplay extends DisplayEntity implements ServerMovableDis
 
     @Override
     public byte[] encodeToBytes() {
-        FriendlyByteBuf buf = new FriendlyByteBuf(Unpooled.buffer());
-        DisplayEntity.encodeBase(this, buf);
-        writeVec3(buf, end);
-        buf.writeInt(maxAge);
-        buf.writeInt(bloomCount);
-        buf.writeFloat(thinness);
-        buf.writeInt(age);
-        buf.writeBoolean(removed);
-        byte[] bytes = new byte[buf.readableBytes()];
-        buf.readBytes(bytes);
-        return bytes;
+        return FriendlyByteBufs.encodeToByteArray(buf -> {
+            DisplayEntity.encodeBase(this, buf);
+            writeVec3(buf, end);
+            buf.writeInt(maxAge);
+            buf.writeInt(bloomCount);
+            buf.writeFloat(thinness);
+            buf.writeInt(age);
+            buf.writeBoolean(removed);
+        });
     }
 
     public static SwordLightDisplay decode(FriendlyByteBuf buf) {

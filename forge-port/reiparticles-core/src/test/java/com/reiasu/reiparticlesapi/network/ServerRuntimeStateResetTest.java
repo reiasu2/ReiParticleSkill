@@ -8,6 +8,8 @@ import com.reiasu.reiparticlesapi.animation.AnimateManager;
 import com.reiasu.reiparticlesapi.animation.AnimateNode;
 import com.reiasu.reiparticlesapi.display.DebugDisplayEntity;
 import com.reiasu.reiparticlesapi.display.DisplayEntityManager;
+import com.reiasu.reiparticlesapi.network.animation.PathMotionManager;
+import com.reiasu.reiparticlesapi.network.animation.api.AbstractPathMotion;
 import com.reiasu.reiparticlesapi.network.buffer.ParticleControllerDataBuffer;
 import com.reiasu.reiparticlesapi.network.particle.ServerParticleGroup;
 import com.reiasu.reiparticlesapi.network.particle.ServerParticleGroupManager;
@@ -59,6 +61,7 @@ class ServerRuntimeStateResetTest {
         ServerRenderEntityManager.INSTANCE.clear();
         ReiScheduler.INSTANCE.clear();
         TestManager.INSTANCE.clear();
+        PathMotionManager.INSTANCE.clear();
         ServerSyncPacketBudget.reset();
     }
 
@@ -75,6 +78,7 @@ class ServerRuntimeStateResetTest {
         Set<UUID> trackedStyles = ConcurrentHashMap.newKeySet();
         trackedStyles.add(serverStyle.getUuid());
         ParticleStyleManager.getVisible().put(UUID.randomUUID(), trackedStyles);
+        PathMotionManager.INSTANCE.applyMotion(new CountingPathMotion());
 
         ServerLevel serverLevel = UnsafeAllocator.allocate(ServerLevel.class);
         CountingServerGroup serverGroup = new CountingServerGroup();
@@ -97,6 +101,7 @@ class ServerRuntimeStateResetTest {
         assertNull(ServerParticleGroupManager.INSTANCE.getParticleGroup(serverGroup.getUuid()));
         assertTrue(ServerRenderEntityManager.INSTANCE.getEntities().isEmpty());
         assertTrue(TestManager.INSTANCE.getValidGroupsServer().isEmpty());
+        assertTrue(PathMotionManager.INSTANCE.getMotions().isEmpty());
         assertEquals(0, ServerSyncPacketBudget.usedPackets());
 
         ReiScheduler.INSTANCE.doServerTick();
@@ -223,6 +228,26 @@ class ServerRuntimeStateResetTest {
         @Override
         public ResourceLocation getRenderID() {
             return new ResourceLocation("test", "render");
+        }
+    }
+
+    private static final class CountingPathMotion extends AbstractPathMotion {
+        private CountingPathMotion() {
+            super(Vec3.ZERO);
+        }
+
+        @Override
+        public void apply(Vec3 actualPos) {
+        }
+
+        @Override
+        public Vec3 pathFunction() {
+            return Vec3.ZERO;
+        }
+
+        @Override
+        public boolean checkValid() {
+            return true;
         }
     }
 

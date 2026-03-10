@@ -5,9 +5,9 @@ package com.reiasu.reiparticlesapi.network.particle.composition.manager;
 import com.mojang.logging.LogUtils;
 import com.reiasu.reiparticlesapi.annotations.codec.BufferCodec;
 import com.reiasu.reiparticlesapi.annotations.composition.handler.ParticleCompositionHelper;
+import com.reiasu.reiparticlesapi.network.buffer.FriendlyByteBufs;
 import com.reiasu.reiparticlesapi.network.packet.PacketParticleCompositionS2C;
 import com.reiasu.reiparticlesapi.network.particle.composition.ParticleComposition;
-import io.netty.buffer.Unpooled;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
@@ -212,10 +212,7 @@ public final class ParticleCompositionManager {
             return null;
         }
 
-        FriendlyByteBuf buf = new FriendlyByteBuf(Unpooled.buffer());
-        codec.encode(buf, composition);
-        byte[] data = new byte[buf.readableBytes()];
-        buf.readBytes(data);
+        byte[] data = FriendlyByteBufs.encodeToByteArray(buf -> codec.encode(buf, composition));
 
         PacketParticleCompositionS2C packet =
                 new PacketParticleCompositionS2C(composition.getControlUUID(), typeId, data);

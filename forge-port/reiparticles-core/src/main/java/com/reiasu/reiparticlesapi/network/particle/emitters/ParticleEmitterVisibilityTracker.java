@@ -51,16 +51,26 @@ final class ParticleEmitterVisibilityTracker {
         }
         beginSharedBudget(level);
         EncodedEmitterPackets packets = EncodedEmitterPackets.create(emitters);
+        double maxVisibleRange = Math.min(emitters.getVisibleRange(), APIConfig.INSTANCE.getMaxEmitterVisibleRange());
+        double maxVisibleRangeSq = maxVisibleRange * maxVisibleRange;
+        double nearestDistanceSq = Double.POSITIVE_INFINITY;
 
         List<ServerPlayer> players = level.players();
         for (int i = 0; i < players.size(); i++) {
+            ServerPlayer player = players.get(i);
+            if (player == null || player.isRemoved() || player.isSpectator() || emitters.level() != player.level()) {
+                continue;
+            }
+            double distanceSq = player.position().distanceToSqr(emitters.position());
+            if (distanceSq < nearestDistanceSq) {
+                nearestDistanceSq = distanceSq;
+            }
             if (i % PLAYER_SHARD_COUNT != (int) (tick % PLAYER_SHARD_COUNT)) {
                 statSkippedShard++;
                 continue;
             }
-            ServerPlayer player = players.get(i);
             Set<UUID> visibleSet = visible.computeIfAbsent(player.getUUID(), ignored -> ConcurrentHashMap.newKeySet());
-            boolean shouldView = canViewEmitter(emitters, player);
+            boolean shouldView = canViewEmitter(distanceSq, maxVisibleRangeSq);
             boolean isViewing = visibleSet.contains(emitters.getUuid());
 
             if (shouldView && !isViewing) {
@@ -72,8 +82,7 @@ final class ParticleEmitterVisibilityTracker {
                 continue;
             }
             if (shouldView) {
-                double dist = player.position().distanceTo(emitters.position());
-                int lodInterval = computeLodInterval(dist, emitters.getVisibleRange());
+                int lodInterval = computeLodInterval(Math.sqrt(distanceSq), maxVisibleRange);
                 if (lodInterval > 1 && (emitters.getTick() % lodInterval) != 0) {
                     statSkippedLod++;
                     continue;
@@ -81,6 +90,7 @@ final class ParticleEmitterVisibilityTracker {
                 sendChange(packets, player);
             }
         }
+        emitters.setNearestViewerDistanceSq(nearestDistanceSq);
     }
 
     static int computeLodInterval(double distance, double visibleRange) {
@@ -97,18 +107,8 @@ final class ParticleEmitterVisibilityTracker {
         return 12;
     }
 
-    static boolean canViewEmitter(ParticleEmitters emitters, ServerPlayer player) {
-        if (emitters.level() == null || player == null) {
-            return false;
-        }
-        if (player.isRemoved() || player.isSpectator()) {
-            return false;
-        }
-        if (emitters.level() != player.level()) {
-            return false;
-        }
-        double range = Math.min(emitters.getVisibleRange(), APIConfig.INSTANCE.getMaxEmitterVisibleRange());
-        return player.position().distanceTo(emitters.position()) <= range;
+    static boolean canViewEmitter(double distanceSq, double rangeSq) {
+        return distanceSq <= rangeSq;
     }
 
     static boolean markVisibleAfterSuccessfulSend(Set<UUID> visibleSet, UUID emitterId, BooleanSupplier sendAction) {

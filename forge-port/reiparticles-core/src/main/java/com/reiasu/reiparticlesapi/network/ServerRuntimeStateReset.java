@@ -4,6 +4,7 @@ package com.reiasu.reiparticlesapi.network;
 
 import com.reiasu.reiparticlesapi.animation.AnimateManager;
 import com.reiasu.reiparticlesapi.display.DisplayEntityManager;
+import com.reiasu.reiparticlesapi.network.animation.PathMotionManager;
 import com.reiasu.reiparticlesapi.network.particle.ServerParticleGroupManager;
 import com.reiasu.reiparticlesapi.network.particle.composition.manager.ParticleCompositionManager;
 import com.reiasu.reiparticlesapi.network.particle.emitters.ParticleEmittersManager;
@@ -25,6 +26,7 @@ public final class ServerRuntimeStateReset {
         ParticleStyleManager.clearServer();
         ServerParticleGroupManager.INSTANCE.clear();
         ServerRenderEntityManager.INSTANCE.clear();
+        PathMotionManager.INSTANCE.clear();
         ReiScheduler.INSTANCE.clearServer();
         TestManager.INSTANCE.clearServer();
     }

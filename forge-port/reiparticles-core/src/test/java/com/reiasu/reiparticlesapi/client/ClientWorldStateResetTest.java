@@ -4,6 +4,8 @@ package com.reiasu.reiparticlesapi.client;
 
 import com.reiasu.reiparticlesapi.display.DisplayEntity;
 import com.reiasu.reiparticlesapi.display.DisplayEntityManager;
+import com.reiasu.reiparticlesapi.network.animation.PathMotionManager;
+import com.reiasu.reiparticlesapi.network.animation.api.AbstractPathMotion;
 import com.reiasu.reiparticlesapi.network.particle.composition.CompositionData;
 import com.reiasu.reiparticlesapi.network.particle.composition.ParticleComposition;
 import com.reiasu.reiparticlesapi.network.particle.composition.manager.ParticleCompositionManager;
@@ -42,6 +44,7 @@ class ClientWorldStateResetTest {
         ClientRenderEntityManager.INSTANCE.clear();
         ClientParticleGroupManager.INSTANCE.clearAllVisible();
         ParticleCompositionManager.INSTANCE.clear();
+        PathMotionManager.INSTANCE.clear();
     }
 
     @Test
@@ -50,6 +53,7 @@ class ClientWorldStateResetTest {
         DummyStyle style = new DummyStyle();
         DummyRenderEntity renderEntity = new DummyRenderEntity();
         DummyParticleGroup group = new DummyParticleGroup();
+        DummyPathMotion motion = new DummyPathMotion();
         TrackingComposition composition = new TrackingComposition(allocateClientLevel());
         DummyEmitter emitter = new DummyEmitter();
         emitter.setUuid(UUID.randomUUID());
@@ -61,9 +65,11 @@ class ClientWorldStateResetTest {
         ClientParticleGroupManager.INSTANCE.addVisibleGroup(group);
         ParticleCompositionManager.INSTANCE.addClient(composition);
         ParticleEmittersManager.createOrChangeClient(emitter, clientWorld);
+        PathMotionManager.INSTANCE.applyMotion(motion);
 
         assertFalse(emitter.getCanceled());
         assertFalse(composition.handle.removed);
+        assertFalse(PathMotionManager.INSTANCE.getMotions().isEmpty());
 
         ClientWorldStateReset.reset();
 
@@ -75,6 +81,7 @@ class ClientWorldStateResetTest {
         assertNull(ClientParticleGroupManager.INSTANCE.getControlGroup(group.getUuid()));
         assertTrue(ParticleCompositionManager.INSTANCE.getClientView().isEmpty());
         assertTrue(composition.handle.removed);
+        assertTrue(PathMotionManager.INSTANCE.getMotions().isEmpty());
     }
 
     private static ClientLevel allocateClientLevel() {
@@ -201,5 +208,25 @@ class ClientWorldStateResetTest {
     }
 
     private static final class DummyEmitter extends ParticleEmitters {
+    }
+
+    private static final class DummyPathMotion extends AbstractPathMotion {
+        private DummyPathMotion() {
+            super(Vec3.ZERO);
+        }
+
+        @Override
+        public void apply(Vec3 actualPos) {
+        }
+
+        @Override
+        public Vec3 pathFunction() {
+            return Vec3.ZERO;
+        }
+
+        @Override
+        public boolean checkValid() {
+            return true;
+        }
     }
 }

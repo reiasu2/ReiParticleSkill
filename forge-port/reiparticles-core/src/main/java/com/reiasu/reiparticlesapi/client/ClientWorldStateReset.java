@@ -3,6 +3,7 @@
 package com.reiasu.reiparticlesapi.client;
 
 import com.reiasu.reiparticlesapi.display.DisplayEntityManager;
+import com.reiasu.reiparticlesapi.network.animation.PathMotionManager;
 import com.reiasu.reiparticlesapi.network.particle.composition.manager.ParticleCompositionManager;
 import com.reiasu.reiparticlesapi.network.particle.emitters.ParticleEmittersManager;
 import com.reiasu.reiparticlesapi.network.particle.style.ParticleStyleManager;
@@ -20,5 +21,6 @@ public final class ClientWorldStateReset {
         ParticleStyleManager.clearAllVisible();
         ClientRenderEntityManager.INSTANCE.clear();
         ClientParticleGroupManager.INSTANCE.clearAllVisible();
+        PathMotionManager.INSTANCE.clear();
     }
 }

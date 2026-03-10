@@ -2,9 +2,8 @@
 // Copyright (C) 2025 Reiasu
 package com.reiasu.reiparticlesapi.network.particle.emitters;
 
+import com.reiasu.reiparticlesapi.network.buffer.FriendlyByteBufs;
 import com.reiasu.reiparticlesapi.network.particle.ServerController;
-import com.reiasu.reiparticlesapi.network.particle.emitters.ParticleEmittersManager;
-import io.netty.buffer.Unpooled;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
@@ -50,6 +49,7 @@ public abstract class ParticleEmitters implements ServerController<ParticleEmitt
     private Vec3 position = Vec3.ZERO;
     private double visibleRange = 256.0;
     private int throttleInterval = 1;
+    private double cachedNearestViewerDistanceSq = Double.NaN;
 
     @Override
     public void spawnInWorld(ServerLevel world, Vec3 pos) {
@@ -95,6 +95,7 @@ public abstract class ParticleEmitters implements ServerController<ParticleEmitt
     public ParticleEmitters bind(Level level, double x, double y, double z) {
         this.level = level;
         this.position = new Vec3(x, y, z);
+        this.cachedNearestViewerDistanceSq = Double.NaN;
         return this;
     }
 
@@ -108,6 +109,7 @@ public abstract class ParticleEmitters implements ServerController<ParticleEmitt
 
     public void teleportTo(Vec3 pos) {
         this.position = pos;
+        this.cachedNearestViewerDistanceSq = Double.NaN;
     }
 
     public ParticleEmitters addTickHandler(Runnable handler) {
@@ -123,6 +125,7 @@ public abstract class ParticleEmitters implements ServerController<ParticleEmitt
         this.tick = emitter.tick;
         this.level = emitter.level;
         this.position = emitter.position;
+        this.cachedNearestViewerDistanceSq = Double.NaN;
     }
 
     /** Override to write custom emitter parameters for network sync. */
@@ -135,18 +138,16 @@ public abstract class ParticleEmitters implements ServerController<ParticleEmitt
 
     /** Serializes the full emitter state (header + payload) into a byte array for network transmission. */
     public byte[] encodeToBytes() {
-        FriendlyByteBuf buf = new FriendlyByteBuf(Unpooled.buffer());
-        buf.writeUUID(uuid);
-        buf.writeInt(maxTick);
-        buf.writeInt(tick);
-        buf.writeBoolean(canceled);
-        buf.writeDouble(position.x);
-        buf.writeDouble(position.y);
-        buf.writeDouble(position.z);
-        writePayload(buf);
-        byte[] bytes = new byte[buf.readableBytes()];
-        buf.readBytes(bytes);
-        return bytes;
+        return FriendlyByteBufs.encodeToByteArray(buf -> {
+            buf.writeUUID(uuid);
+            buf.writeInt(maxTick);
+            buf.writeInt(tick);
+            buf.writeBoolean(canceled);
+            buf.writeDouble(position.x);
+            buf.writeDouble(position.y);
+            buf.writeDouble(position.z);
+            writePayload(buf);
+        });
     }
 
     /** Deserializes emitter state from a network buffer. Typically called inside {@code decode()}. */
@@ -190,14 +191,15 @@ public abstract class ParticleEmitters implements ServerController<ParticleEmitt
         }
         // Distance-based throttling: skip emission when no player is in range
         if (level instanceof ServerLevel serverLevel && position != null) {
-            double nearest = nearestPlayerDist(serverLevel);
-            if (nearest > visibleRange) {
+            double nearestDistanceSq = nearestPlayerDistanceSq(serverLevel);
+            double visibleRangeSq = visibleRange * visibleRange;
+            if (nearestDistanceSq > visibleRangeSq) {
                 tick++;
                 if (maxTick > 0 && tick >= maxTick) canceled = true;
                 return;
             }
             // Throttle when players are far (beyond half range)
-            if (throttleInterval > 1 && nearest > visibleRange * 0.5 && (tick % throttleInterval) != 0) {
+            if (throttleInterval > 1 && nearestDistanceSq > visibleRangeSq * 0.25 && (tick % throttleInterval) != 0) {
                 tick++;
                 if (maxTick > 0 && tick >= maxTick) canceled = true;
                 return;
@@ -213,11 +215,18 @@ public abstract class ParticleEmitters implements ServerController<ParticleEmitt
         }
     }
 
-    private double nearestPlayerDist(ServerLevel serverLevel) {
-        double min = Double.MAX_VALUE;
+    void setNearestViewerDistanceSq(double distanceSq) {
+        cachedNearestViewerDistanceSq = distanceSq;
+    }
+
+    private double nearestPlayerDistanceSq(ServerLevel serverLevel) {
+        if (!Double.isNaN(cachedNearestViewerDistanceSq)) {
+            return cachedNearestViewerDistanceSq;
+        }
+        double min = Double.POSITIVE_INFINITY;
         for (ServerPlayer p : serverLevel.players()) {
             if (p.isRemoved() || p.isSpectator()) continue;
-            double d = p.position().distanceTo(position);
+            double d = p.position().distanceToSqr(position);
             if (d < min) min = d;
         }
         return min;

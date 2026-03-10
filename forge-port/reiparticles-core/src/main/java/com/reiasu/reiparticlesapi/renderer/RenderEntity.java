@@ -2,10 +2,10 @@
 // Copyright (C) 2025 Reiasu
 package com.reiasu.reiparticlesapi.renderer;
 
+import com.reiasu.reiparticlesapi.network.buffer.FriendlyByteBufs;
 import com.reiasu.reiparticlesapi.network.particle.ServerController;
 import com.reiasu.reiparticlesapi.renderer.server.ServerRenderEntityManager;
 import com.reiasu.reiparticlesapi.utils.RelativeLocation;
-import io.netty.buffer.Unpooled;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
@@ -145,11 +145,7 @@ public abstract class RenderEntity implements ServerController<RenderEntity> {
     }
 
     public byte[] encodeToBytes() {
-        FriendlyByteBuf buf = new FriendlyByteBuf(Unpooled.buffer());
-        encodeBase(this, buf);
-        byte[] data = new byte[buf.readableBytes()];
-        buf.getBytes(0, data);
-        return data;
+        return FriendlyByteBufs.encodeToByteArray(buf -> encodeBase(this, buf));
     }
 
     public void markDirty() {

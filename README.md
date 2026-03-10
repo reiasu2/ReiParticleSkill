@@ -18,7 +18,7 @@ cd forge-port
 ```
 
 Run Gradle from `forge-port`.
-If you prefer the repository root entry point, run `build.cmd`. It builds the Forge runtime module with tests and verification enabled, then copies the distributable jar to your Desktop.
+If you prefer the repository root entry point, run `build.cmd`. It runs the aggregate `forge-port` build for all subprojects with tests and verification enabled, then copies the runtime jar to your Desktop.
 
 Canonical distributable jar: `forge-port/reiparticles-forge-runtime/build/libs/reiparticleskill-1.0-SNAPSHOT-forge-port.jar`
 Verification: `cd forge-port` then `.\gradlew check`

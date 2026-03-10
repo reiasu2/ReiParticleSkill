@@ -3,9 +3,9 @@
 package com.reiasu.reiparticleskill.display;
 
 import com.reiasu.reiparticlesapi.display.DisplayEntity;
+import com.reiasu.reiparticlesapi.network.buffer.FriendlyByteBufs;
 import com.reiasu.reiparticlesapi.utils.RelativeLocation;
 import com.reiasu.reiparticleskill.entities.BarrageItemEntity;
-import io.netty.buffer.Unpooled;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerLevel;
@@ -52,28 +52,26 @@ public class BarrageItemDisplay extends DisplayEntity implements ServerMovableDi
 
     @Override
     public byte[] encodeToBytes() {
-        FriendlyByteBuf buf = new FriendlyByteBuf(Unpooled.buffer());
-        DisplayEntity.encodeBase(this, buf);
-        buf.writeItem(item);
-        buf.writeBoolean(block);
-        buf.writeInt(sign);
-        writeVec3(buf, prevPos);
-        writeVec3(buf, velocity);
-        buf.writeFloat(prevYaw);
-        buf.writeFloat(prevPitch);
-        buf.writeFloat(prevRoll);
-        buf.writeFloat(preScale);
-        buf.writeFloat(targetScale);
-        buf.writeFloat(scaledSpeed);
-        buf.writeFloat(targetYaw);
-        buf.writeFloat(targetPitch);
-        buf.writeFloat(rotateSpeed);
-        buf.writeInt(blendCount);
-        buf.writeInt(age);
-        buf.writeInt(displayTick);
-        byte[] bytes = new byte[buf.readableBytes()];
-        buf.readBytes(bytes);
-        return bytes;
+        return FriendlyByteBufs.encodeToByteArray(buf -> {
+            DisplayEntity.encodeBase(this, buf);
+            buf.writeItem(item);
+            buf.writeBoolean(block);
+            buf.writeInt(sign);
+            writeVec3(buf, prevPos);
+            writeVec3(buf, velocity);
+            buf.writeFloat(prevYaw);
+            buf.writeFloat(prevPitch);
+            buf.writeFloat(prevRoll);
+            buf.writeFloat(preScale);
+            buf.writeFloat(targetScale);
+            buf.writeFloat(scaledSpeed);
+            buf.writeFloat(targetYaw);
+            buf.writeFloat(targetPitch);
+            buf.writeFloat(rotateSpeed);
+            buf.writeInt(blendCount);
+            buf.writeInt(age);
+            buf.writeInt(displayTick);
+        });
     }
 
     public static BarrageItemDisplay decode(FriendlyByteBuf buf) {

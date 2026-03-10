@@ -2,7 +2,7 @@
 // Copyright (C) 2025 Reiasu
 package com.reiasu.reiparticlesapi.display;
 
-import io.netty.buffer.Unpooled;
+import com.reiasu.reiparticlesapi.network.buffer.FriendlyByteBufs;
 import net.minecraft.core.particles.DustParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.FriendlyByteBuf;
@@ -42,14 +42,12 @@ public class DebugDisplayEntity extends DisplayEntity {
 
     @Override
     public byte[] encodeToBytes() {
-        FriendlyByteBuf buf = new FriendlyByteBuf(Unpooled.buffer());
-        DisplayEntity.encodeBase(this, buf);
-        buf.writeUtf(kind == null ? "" : kind);
-        buf.writeInt(maxTicks);
-        buf.writeInt(tick);
-        byte[] bytes = new byte[buf.readableBytes()];
-        buf.readBytes(bytes);
-        return bytes;
+        return FriendlyByteBufs.encodeToByteArray(buf -> {
+            DisplayEntity.encodeBase(this, buf);
+            buf.writeUtf(kind == null ? "" : kind);
+            buf.writeInt(maxTicks);
+            buf.writeInt(tick);
+        });
     }
 
     public static DebugDisplayEntity decode(FriendlyByteBuf buf) {
