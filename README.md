@@ -1,6 +1,6 @@
 # ReiParticleSkill Forge (1.20.1)
 
-[![License: LGPL-3.0-only](https://img.shields.io/badge/License-LGPL--3.0--only-blue.svg)](https://www.gnu.org/licenses/lgpl-3.0)
+[![License: LGPL-3.0-only](https://img.shields.io/badge/License-LGPL--3.0--only-blue.svg)](https://www.gnu.org/licenses/lgpl-3.0)   [![GitHub Roast 评分徽章](https://ghfind.com/api/badge/reiasu2)](https://ghfind.com/u/reiasu2)
 
 ReiParticleSkill is a Forge 1.20.1 mod for Ender Dragon respawn effects.
 
